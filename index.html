@@ -5,30 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>RummyTable Pro</title>
     
-    <!-- PWA Meta Tags for iOS -->
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="RummyPro" />
-    <meta name="theme-color" content="#111827" />
-
-    <!-- Web App Manifest -->
-    <link id="manifest-link" rel="manifest" />
-    <script>
-        const manifest = {
-            "name": "RummyTable Pro",
-            "short_name": "RummyPro",
-            "start_url": ".",
-            "display": "standalone",
-            "background_color": "#111827",
-            "theme_color": "#111827",
-            "orientation": "landscape",
-            "icons": []
-        };
-        const stringManifest = JSON.stringify(manifest);
-        const blob = new Blob([stringManifest], {type: 'application/json'});
-        const manifestURL = URL.createObjectURL(blob);
-        document.querySelector('#manifest-link').setAttribute('href', manifestURL);
-    </script>
+    <!-- PWA Meta Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#111827">
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -57,22 +38,52 @@
         },
       }
     </script>
-    
+
     <!-- React & Babel -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- Dynamic Manifest -->
+    <link rel="manifest" id="manifest-placeholder">
+    <script>
+      const manifest = {
+        name: "RummyTable Pro",
+        short_name: "RummyTable",
+        display: "standalone",
+        background_color: "#111827",
+        theme_color: "#111827",
+        start_url: ".",
+        orientation: "portrait",
+        icons: [
+            {
+                "src": "https://cdn-icons-png.flaticon.com/512/3067/3067822.png", 
+                "sizes": "192x192",
+                "type": "image/png"
+            }
+        ]
+      };
+      const stringManifest = JSON.stringify(manifest);
+      const blob = new Blob([stringManifest], {type: 'application/json'});
+      const manifestURL = URL.createObjectURL(blob);
+      document.getElementById('manifest-placeholder').setAttribute('href', manifestURL);
+    </script>
 
     <style>
       body {
         overscroll-behavior-y: none;
         -webkit-user-select: none;
         user-select: none;
-        background-color: #111827;
+        -webkit-tap-highlight-color: transparent;
       }
-      /* Hide scrollbars */
-      ::-webkit-scrollbar {
+      /* Hide scrollbar for Chrome, Safari and Opera */
+      .no-scrollbar::-webkit-scrollbar {
           display: none;
+      }
+      /* Hide scrollbar for IE, Edge and Firefox */
+      .no-scrollbar {
+          -ms-overflow-style: none;  /* IE and Edge */
+          scrollbar-width: none;  /* Firefox */
       }
     </style>
 <script type="importmap">
@@ -81,45 +92,38 @@
     "react": "https://aistudiocdn.com/react@^19.2.0",
     "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
     "react/": "https://aistudiocdn.com/react@^19.2.0/",
-    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.554.0",
+    "uuid": "https://aistudiocdn.com/uuid@^13.0.0",
     "clsx": "https://aistudiocdn.com/clsx@^2.1.1",
-    "uuid": "https://aistudiocdn.com/uuid@^13.0.0"
+    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.555.0"
   }
 }
 </script>
 </head>
-<body class="bg-gray-900 overflow-hidden touch-none text-gray-100">
+<body class="bg-gray-900 overflow-hidden touch-none text-white">
     <div id="root" class="h-full w-full"></div>
 
     <script type="text/babel" data-presets="typescript,react">
-        const { useState, useEffect, useCallback, useRef, useMemo } = React;
+        /*******************************************************
+         * POLYFILLS & LIBS
+         *******************************************************/
+        const uuidv4 = () => {
+            if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+                return crypto.randomUUID();
+            }
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+        };
 
-        // ----------------------------------------------------------------------
-        // 1. UTILITIES & POLYFILLS
-        // ----------------------------------------------------------------------
+        const clsx = (...args) => {
+            return args.flat().filter(Boolean).join(' ');
+        };
 
-        function uuidv4() {
-          return "10000000-1000-4000-8000-100000000000".replace(/[018]/g, c =>
-            (+c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> +c / 4).toString(16)
-          );
-        }
-
-        function clsx(...args) {
-          return args.filter(Boolean).map(i => {
-              if (typeof i === 'string') return i;
-              if (Array.isArray(i)) return clsx(...i);
-              if (typeof i === 'object') {
-                  return Object.keys(i).filter(k => i[k]).join(' ');
-              }
-              return '';
-          }).join(' ');
-        }
-
-        // ----------------------------------------------------------------------
-        // 2. ICONS (Lucide Implementation)
-        // ----------------------------------------------------------------------
-        
-        const IconBase = ({ size = 24, className = "", children, ...props }) => (
+        /*******************************************************
+         * ICONS (Lucide Replacements)
+         *******************************************************/
+        const IconBase = ({ size = 24, className, children, ...props }) => (
             <svg 
                 xmlns="http://www.w3.org/2000/svg" 
                 width={size} 
@@ -137,52 +141,37 @@
             </svg>
         );
 
-        const Ghost = (props) => (
-            <IconBase {...props}><path d="M9 10h.01"/><path d="M15 10h.01"/><path d="M12 2a8 8 0 0 0-8 8v12l3-3 2.5 2.5L12 19l2.5 2.5L17 19l3 3V10a8 8 0 0 0-8-8z"/></IconBase>
-        );
-        const Layers = (props) => (
-            <IconBase {...props}><path d="m12.83 2.18-10 6a2 2 0 0 0 0 3.44l10 6a2 2 0 0 0 2.34 0l10-6a2 2 0 0 0 0-3.44l-10-6a2 2 0 0 0-2.34 0Z"/><path d="M2 12l10 6 10-6"/><path d="M2 17l10 6 10-6"/></IconBase>
-        );
-        const Palette = (props) => (
-            <IconBase {...props}><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.03 0-.875.75-1.563 1.563-1.563h.718c2.149 0 3.937-1.789 3.937-3.938 0-4.437-3.812-8.062-8-8.062z"/></IconBase>
-        );
-        const PlusSquare = (props) => (
-            <IconBase {...props}><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M8 12h8"/><path d="M12 8v8"/></IconBase>
-        );
-        const PlayCircle = (props) => (
-            <IconBase {...props}><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></IconBase>
-        );
-        const Download = (props) => (
-            <IconBase {...props}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></IconBase>
-        );
-        const Move = (props) => (
-            <IconBase {...props}><polyline points="5 9 2 12 5 15"/><polyline points="9 5 12 2 15 5"/><polyline points="15 19 12 22 9 19"/><polyline points="19 15 22 12 19 9"/><line x1="2" x2="22" y1="12" y2="12"/><line x1="12" x2="12" y1="2" y2="22"/></IconBase>
-        );
-        const RotateCcw = (props) => (
-            <IconBase {...props}><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></IconBase>
-        );
-        const Play = (props) => (
-            <IconBase {...props}><polygon points="5 3 19 12 5 21 5 3"/></IconBase>
-        );
-        const Trash2 = (props) => (
-            <IconBase {...props}><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></IconBase>
-        );
-        const Repeat = (props) => (
-            <IconBase {...props}><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></IconBase>
-        );
-        const History = (props) => (
-            <IconBase {...props}><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></IconBase>
-        );
-        const AlertTriangle = (props) => (
-            <IconBase {...props}><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></IconBase>
-        );
+        const Icons = {
+            Ghost: (props) => <IconBase {...props}><path d="M9 10h.01"/><path d="M15 10h.01"/><path d="M12 2a8 8 0 0 0-8 8v12l3-3 2.5 2.5L12 19l2.5 2.5L17 19l3 3V10a8 8 0 0 0-8-8z"/></IconBase>,
+            Palette: (props) => <IconBase {...props}><path d="M13.5 11.5A2.5 2.5 0 0 0 16 9v-.5a2.5 2.5 0 0 0-5 0V9a2.5 2.5 0 0 0 2.5 2.5z"/><path d="M2 12c0-5.5 4.5-10 10-10 3 0 6 2.5 6 5.5 0 1.4-.4 2.8-1 4-1.6 3-3.6 5-8.5 5h-1a3 3 0 0 1-3-3 3 3 0 0 1 3-3"/></IconBase>,
+            Layers: (props) => <IconBase {...props}><path d="M2 17L12 22L22 17"/><path d="M2 12L12 17L22 12"/><path d="M12 2L2 7L12 12L22 7L12 2"/></IconBase>,
+            PlusSquare: (props) => <IconBase {...props}><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M8 12h8"/><path d="M12 8v8"/></IconBase>,
+            Download: (props) => <IconBase {...props}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></IconBase>,
+            ChevronUp: (props) => <IconBase {...props}><path d="m18 15-6-6-6 6"/></IconBase>,
+            ChevronDown: (props) => <IconBase {...props}><path d="m6 9 6 6 6-6"/></IconBase>,
+            Move: (props) => <IconBase {...props}><polyline points="5 9 2 12 5 15"/><polyline points="9 5 12 2 15 5"/><polyline points="19 9 22 12 19 15"/><polyline points="15 19 12 22 9 19"/><line x1="2" x2="22" y1="12" y2="12"/><line x1="12" x2="12" y1="2" y2="22"/></IconBase>,
+            RotateCcw: (props) => <IconBase {...props}><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></IconBase>,
+            Play: (props) => <IconBase {...props}><polygon points="5 3 19 12 5 21 5 3"/></IconBase>,
+            Trash2: (props) => <IconBase {...props}><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></IconBase>,
+            Repeat: (props) => <IconBase {...props}><path d="m17 1 4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="m7 23-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></IconBase>,
+            History: (props) => <IconBase {...props}><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></IconBase>,
+            Minimize2: (props) => <IconBase {...props}><polyline points="4 14 10 14 10 20"/><polyline points="20 10 14 10 14 4"/><line x1="14" x2="21" y1="10" y2="3"/><line x1="3" x2="10" y1="21" y2="14"/></IconBase>,
+            AlertTriangle: (props) => <IconBase {...props}><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></IconBase>,
+        };
 
-        // ----------------------------------------------------------------------
-        // 3. TYPES & CONSTANTS
-        // ----------------------------------------------------------------------
+        /*******************************************************
+         * TYPES & INTERFACES (Kept for Babel TS preset)
+         *******************************************************/
+        // Note: In pure JS output, these are stripped.
+        /*
+        type TileColor = 'BLACK' | 'BLUE' | 'RED' | 'ORANGE';
+        interface TileData { ... }
+        interface BoardSet { ... }
+        */
 
-        // TypeScript interfaces are implicit in JS, skipping explicit interface definitions.
-        
+        /*******************************************************
+         * CONSTANTS
+         *******************************************************/
         const COLORS = ['BLACK', 'BLUE', 'RED', 'ORANGE'];
         const MIN_VALUE = 1;
         const MAX_VALUE = 13;
@@ -198,22 +187,11 @@
           ORANGE: 'text-rummy-orange',
         };
 
-        // ----------------------------------------------------------------------
-        // 4. GAME LOGIC
-        // ----------------------------------------------------------------------
-
-        const shuffleDeck = (deck) => {
-          const newDeck = [...deck];
-          for (let i = newDeck.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [newDeck[i], newDeck[j]] = [newDeck[j], newDeck[i]];
-          }
-          return newDeck;
-        };
-
+        /*******************************************************
+         * UTILS (Game Logic)
+         *******************************************************/
         const generateDeck = () => {
           const deck = [];
-          // Number Tiles
           COLORS.forEach(color => {
             for (let i = 0; i < DUPLICATES_PER_DECK; i++) {
               for (let val = MIN_VALUE; val <= MAX_VALUE; val++) {
@@ -226,16 +204,25 @@
               }
             }
           });
-          // Jokers
+          const jokerColors = ['BLACK', 'RED'];
           for (let i = 0; i < JOKER_COUNT; i++) {
             deck.push({
               id: uuidv4(),
               value: 0,
-              color: null,
+              color: jokerColors[i % jokerColors.length], 
               isJoker: true,
             });
           }
           return shuffleDeck(deck);
+        };
+
+        const shuffleDeck = (deck) => {
+          const newDeck = [...deck];
+          for (let i = newDeck.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [newDeck[i], newDeck[j]] = [newDeck[j], newDeck[i]];
+          }
+          return newDeck;
         };
 
         const sortTiles = (tiles, method) => {
@@ -261,13 +248,11 @@
         };
 
         const sortHand = (tiles, method) => {
-            // 1. Logical Sort
             const sorted = sortTiles(tiles, method);
-            
-            // 2. Identify Duplicates
             const unique = [];
             const duplicates = [];
             const seen = new Set();
+
             sorted.forEach(tile => {
                 const key = tile.isJoker ? 'JOKER' : `${tile.color}-${tile.value}`;
                 if (seen.has(key)) {
@@ -280,7 +265,6 @@
                 }
             });
 
-            // 3. Grid Positioning
             const totalTiles = tiles.length;
             const dynamicRows = totalTiles > (RACK_ROWS * RACK_COLS) ? 3 : RACK_ROWS;
             const dynamicCols = Math.max(RACK_COLS, Math.ceil(totalTiles / dynamicRows));
@@ -307,13 +291,13 @@
                      dRow--;
                 }
             });
-
             return positionedTiles;
         };
 
         const findFreeRackSlot = (tiles) => {
             const totalTiles = tiles.length;
             const maxValX = tiles.reduce((max, t) => Math.max(max, t.rackX || 0), 0);
+            
             const dynamicRows = totalTiles > (RACK_ROWS * RACK_COLS) ? 3 : RACK_ROWS;
             const dynamicCols = Math.max(RACK_COLS, Math.ceil(totalTiles / dynamicRows), maxValX + 1);
 
@@ -371,7 +355,6 @@
           const jokers = tiles.filter(t => t.isJoker);
           const nonJokers = tiles.filter(t => !t.isJoker);
 
-          // Group Check
           const isGroup = () => {
             if (tiles.length > 4) return false;
             if (nonJokers.length === 0) return true;
@@ -385,7 +368,6 @@
             return true;
           };
 
-          // Run Check
           const isRun = () => {
              if (tiles.length > 13) return false;
              if (nonJokers.length === 0) return true;
@@ -413,24 +395,33 @@
 
         const autoSortSet = (tiles, requireValid = true) => {
             const runSorted = sortTiles(tiles, 'RUN');
-            if (isValidSet(runSorted)) return organizeRun(tiles);
+            if (isValidSet(runSorted)) {
+                return organizeRun(tiles);
+            }
             const groupSorted = sortTiles(tiles, 'GROUP');
             if (isValidSet(groupSorted)) return groupSorted;
-            
             if (requireValid) return null;
-
-            // Loose sort fallback
+            
             const colors = tiles.map(t => t.color).filter(c => c !== null);
-            const mostCommonColor = colors.sort((a,b) => colors.filter(v => v===a).length - colors.filter(v => v===b).length).pop();
+            let mostCommonColor = null;
+            if(colors.length > 0) {
+               // Simple mode for JS without intricate sort logic for counts
+               const counts = {};
+               colors.forEach(c => counts[c] = (counts[c] || 0) + 1);
+               mostCommonColor = Object.keys(counts).reduce((a, b) => counts[a] > counts[b] ? a : b);
+            }
+            
             const sameColorCount = tiles.filter(t => t.color === mostCommonColor).length;
-            if (sameColorCount > tiles.length / 2) return runSorted;
+            if (sameColorCount > tiles.length / 2) {
+                return runSorted;
+            }
             return groupSorted;
         };
 
         const validateMove = (existingTiles, newTiles) => {
             const combined = [...existingTiles, ...newTiles];
             return autoSortSet(combined);
-        };
+        }
 
         const validateBoard = (board) => {
             return board.every(set => isValidSet(set.tiles));
@@ -438,10 +429,10 @@
 
         const getSetDimensions = (tileCount) => {
             const tileWidth = 48;
-            const gap = 2;
-            const padding = 4;
+            const gap = 1;
+            const padding = 2;
             const width = (tileCount * tileWidth) + ((tileCount - 1) * gap) + padding;
-            const height = 90; 
+            const height = 80;
             return { width, height };
         };
 
@@ -454,14 +445,14 @@
 
         const findFreePosition = (existingSets, tileCount) => {
             const { width, height } = getSetDimensions(tileCount);
-            const buffer = 8;
+            const buffer = 2;
             const newRect = { x: 0, y: 0, w: width + buffer, h: height + buffer };
-            const a = 12; 
+            const a = 5;
             let angle = 0;
-            const step = 0.5;
+            const step = 0.1;
             let i = 0;
 
-            while (i < 2000) {
+            while (i < 5000) {
                 const radius = a * angle;
                 newRect.x = i === 0 ? 0 : radius * Math.cos(angle);
                 newRect.y = i === 0 ? 0 : radius * Math.sin(angle);
@@ -481,17 +472,60 @@
             return { x: 0, y: 0 };
         };
 
-        // ----------------------------------------------------------------------
-        // 5. COMPONENTS
-        // ----------------------------------------------------------------------
+        const compactBoardLogic = (sets) => {
+            const sortedSets = [...sets].sort((a, b) => Math.hypot(a.x, a.y) - Math.hypot(b.x, b.y));
+            const compactedSets = [];
+            
+            for (const set of sortedSets) {
+                const { width, height } = getSetDimensions(set.tiles.length);
+                const buffer = 2;
+                const setRect = { x: 0, y: 0, w: width + buffer, h: height + buffer };
+                const angle = Math.atan2(set.y, set.x);
+                const maxDist = Math.hypot(set.x, set.y);
+                let validX = set.x;
+                let validY = set.y;
+                const rayStep = 5;
+                
+                for (let r = 0; r <= maxDist; r += rayStep) {
+                     setRect.x = r * Math.cos(angle);
+                     setRect.y = r * Math.sin(angle);
+                     const collision = compactedSets.some(placedSet => {
+                         const dim = getSetDimensions(placedSet.tiles.length);
+                         return doRectsIntersect(setRect, {
+                             x: placedSet.x,
+                             y: placedSet.y,
+                             w: dim.width + buffer,
+                             h: dim.height + buffer
+                         });
+                     });
+                     if (!collision) {
+                         validX = setRect.x;
+                         validY = setRect.y;
+                         break;
+                     }
+                }
+                compactedSets.push({ ...set, x: validX, y: validY });
+            }
+            return compactedSets;
+        };
 
-        const Tile = ({ tile, isSelected = false, isDragging = false, isNew = false, size = 'md' }) => {
+        /*******************************************************
+         * COMPONENT: TILE
+         *******************************************************/
+        const Tile = ({ 
+          tile, 
+          isSelected = false, 
+          isDragging = false,
+          isNew = false,
+          size = 'md' 
+        }) => {
           const colorClass = tile.color ? COLOR_MAP[tile.color] : 'text-gray-800';
           const sizeClasses = {
-            sm: 'w-8 h-12 text-sm',
-            md: 'w-10 h-14 text-lg md:w-12 md:h-16 md:text-3xl',
-            lg: 'w-14 h-20 text-4xl',
+            sm: 'w-8 h-12 text-xl',
+            md: 'w-10 h-14 text-3xl md:w-12 md:h-16 md:text-4xl',
+            lg: 'w-14 h-20 text-6xl',
           };
+          const jokerSizes = { sm: 20, md: 32, lg: 40 };
           const isSixOrNine = !tile.isJoker && (tile.value === 6 || tile.value === 9);
 
           return (
@@ -509,14 +543,14 @@
                 isDragging ? "opacity-0" : "opacity-100" 
               )}
             >
-                <div className={clsx("font-bold flex items-center justify-center w-full h-full", colorClass)}>
+                <div className={clsx("font-bold tracking-tighter flex items-center justify-center w-full h-full", colorClass)}>
                     {tile.isJoker ? (
-                        <Ghost size={24} className="mx-auto" />
+                        <Icons.Ghost size={jokerSizes[size]} className="mx-auto" />
                     ) : (
-                        <div className="flex flex-col items-center justify-center -mt-1">
+                        <div className="flex flex-col items-center justify-center -mt-2">
                             <span>{tile.value}</span>
                             {isSixOrNine && (
-                                <div className="w-full h-[2px] bg-current mt-[1px] opacity-50 rounded-full"></div>
+                                <div className="w-full h-[3px] bg-current mt-[0px] opacity-60 rounded-full"></div>
                             )}
                         </div>
                     )}
@@ -526,6 +560,9 @@
           );
         };
 
+        /*******************************************************
+         * COMPONENT: PLAYER RACK
+         *******************************************************/
         const PlayerRack = ({
           playerId,
           tiles,
@@ -534,14 +571,14 @@
           onSort,
           onDraw,
           onPlayNewSet,
-          onAddToSet,
           onDragStart,
           interactionMode,
           disabled = false,
           newTileId = null
         }) => {
           const isTop = playerId === 'TOP';
-          const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+          const [windowWidth, setWindowWidth] = React.useState(window.innerWidth);
+          const [offsetY, setOffsetY] = React.useState(0);
 
           const TILE_WIDTH = 50; 
           const TILE_HEIGHT = 70; 
@@ -553,16 +590,14 @@
 
           const RAW_GRID_WIDTH = dynamicCols * TILE_WIDTH;
           const RAW_GRID_HEIGHT = dynamicRows * TILE_HEIGHT;
-
           const BUTTON_PANEL_WIDTH = 90;
           const TOTAL_BUTTON_SPACE = (BUTTON_PANEL_WIDTH * 2) + 32;
           const availableWidth = windowWidth - TOTAL_BUTTON_SPACE;
           const scale = Math.min(1, availableWidth / RAW_GRID_WIDTH);
-
           const renderedWidth = RAW_GRID_WIDTH * scale;
           const renderedHeight = RAW_GRID_HEIGHT * scale;
 
-          useEffect(() => {
+          React.useEffect(() => {
             const handleResize = () => setWindowWidth(window.innerWidth);
             window.addEventListener('resize', handleResize);
             return () => window.removeEventListener('resize', handleResize);
@@ -575,51 +610,56 @@
               gridMap[`${x},${y}`] = t;
           });
 
+          const handleMoveVisualUp = (e) => {
+              e.stopPropagation();
+              setOffsetY(prev => prev + (isTop ? 10 : -10));
+          };
+
+          const handleMoveVisualDown = (e) => {
+              e.stopPropagation();
+              setOffsetY(prev => prev + (isTop ? -10 : 10));
+          };
+
           return (
             <div 
               className={clsx(
-                "flex items-center justify-between p-2 bg-gray-800/95 shadow-2xl backdrop-blur-sm z-10 w-full transition-opacity duration-300 select-none box-border",
-                isTop ? "rotate-180 border-b-4 border-gray-700" : "border-t-4 border-gray-700",
+                "flex items-center justify-between p-2 bg-gray-800/95 shadow-2xl backdrop-blur-sm z-40 w-full transition-all duration-300 select-none box-border absolute left-0 right-0",
+                isTop ? "top-0 border-b-4 border-gray-700" : "bottom-0 border-t-4 border-gray-700",
                 disabled ? "opacity-40 pointer-events-none grayscale" : "opacity-100"
               )}
               data-rack-id={playerId}
-              style={{ touchAction: 'none' }} 
+              style={{ 
+                  touchAction: 'none',
+                  transform: isTop 
+                    ? `rotate(180deg) translateY(${offsetY}px)` 
+                    : `translateY(${offsetY}px)`
+              }} 
             >
               <div className="flex flex-col gap-2 flex-shrink-0 z-20 w-[80px]">
+                  {!isTop && (
+                    <div className="flex gap-1 mb-1 w-full">
+                        <button onPointerDown={handleMoveVisualUp} className="flex-1 bg-gray-700 text-gray-300 rounded p-1 flex items-center justify-center shadow-md active:bg-gray-600 active:text-white transition-colors h-10"><Icons.ChevronUp size={24} /></button>
+                        <button onPointerDown={handleMoveVisualDown} className="flex-1 bg-gray-700 text-gray-300 rounded p-1 flex items-center justify-center shadow-md active:bg-gray-600 active:text-white transition-colors h-10"><Icons.ChevronDown size={24} /></button>
+                    </div>
+                  )}
                   <button onClick={() => onSort('GROUP')} className="flex flex-col items-center justify-center p-2 bg-gray-700 rounded text-white active:bg-gray-600 hover:bg-gray-600 transition-colors h-16 w-full shadow-md">
-                    <Layers size={24} />
+                    <Icons.Layers size={24} />
                     <span className="text-[10px] font-bold mt-1">123</span>
                   </button>
                   <button onClick={() => onSort('RUN')} className="flex flex-col items-center justify-center p-2 bg-gray-700 rounded text-white active:bg-gray-600 hover:bg-gray-600 transition-colors h-16 w-full shadow-md">
-                    <Palette size={24} />
+                    <Icons.Palette size={24} />
                     <span className="text-[10px] font-bold mt-1">Colors</span>
                   </button>
               </div>
 
               <div className="flex-grow flex justify-center items-center overflow-hidden h-full">
-                <div 
-                    className="relative overflow-visible"
-                    style={{ width: renderedWidth, height: renderedHeight }}
-                >
-                    <div 
-                        className="absolute top-0 left-0 origin-top-left"
-                        style={{ 
-                            width: RAW_GRID_WIDTH,
-                            height: RAW_GRID_HEIGHT,
-                            transform: `scale(${scale})`,
-                        }}
-                    >
+                <div className="relative overflow-visible" style={{ width: renderedWidth, height: renderedHeight }}>
+                    <div className="absolute top-0 left-0 origin-top-left" style={{ width: RAW_GRID_WIDTH, height: RAW_GRID_HEIGHT, transform: `scale(${scale})` }}>
                         {Array.from({ length: dynamicRows }).map((_, r) => (
                             Array.from({ length: dynamicCols }).map((_, c) => {
                                 const tile = gridMap[`${c},${r}`];
                                 return (
-                                    <div
-                                        key={`${c}-${r}`}
-                                        data-slot-x={c}
-                                        data-slot-y={r}
-                                        className="absolute w-[48px] h-[64px] rounded border-transparent"
-                                        style={{ left: c * 50, top: r * 70 }}
-                                    >
+                                    <div key={`${c}-${r}`} data-slot-x={c} data-slot-y={r} className="absolute w-[48px] h-[64px] rounded border-transparent" style={{ left: c * 50, top: r * 70 }}>
                                         {tile && (
                                             <div
                                                 onPointerDown={(e) => {
@@ -629,13 +669,7 @@
                                                 }}
                                                 className="touch-none w-full h-full"
                                             >
-                                                <Tile
-                                                    tile={tile}
-                                                    isSelected={selectedTileIds.includes(tile.id)}
-                                                    isDragging={draggedTileId === tile.id}
-                                                    isNew={tile.id === newTileId}
-                                                    size="md"
-                                                />
+                                                <Tile tile={tile} isSelected={selectedTileIds.includes(tile.id)} isDragging={draggedTileId === tile.id} isNew={tile.id === newTileId} size="md" />
                                             </div>
                                         )}
                                     </div>
@@ -647,41 +681,29 @@
               </div>
 
               <div className="flex flex-col gap-2 flex-shrink-0 z-20 w-[80px]">
-                   <button 
-                     onClick={onDraw} 
-                     className="flex flex-col items-center justify-center p-2 bg-gray-600 rounded text-white font-bold text-sm active:scale-95 transition-transform h-14 w-full shadow-lg"
-                    >
-                     <Download size={20} className="mb-1" />
+                   <button onClick={onDraw} className="flex flex-col items-center justify-center p-2 bg-gray-600 rounded text-white font-bold text-sm active:scale-95 transition-transform h-14 w-full shadow-lg">
+                     <Icons.Download size={20} className="mb-1" />
                      <span className="text-[10px]">DRAW</span>
                    </button>
-                   <button 
-                     onClick={onPlayNewSet} 
-                     className="flex flex-col items-center justify-center p-2 bg-green-700 rounded text-white font-bold text-sm active:scale-95 transition-transform shadow-lg h-14 w-full"
-                   >
-                     <PlusSquare size={20} className="mb-1" />
+                   <button onClick={onPlayNewSet} className="flex flex-col items-center justify-center p-2 bg-green-700 rounded text-white font-bold text-sm active:scale-95 transition-transform shadow-lg h-14 w-full">
+                     <Icons.PlusSquare size={20} className="mb-1" />
                      <span className="text-[10px]">PLAY SET</span>
-                   </button>
-                   <button 
-                     onClick={onAddToSet} 
-                     className={clsx(
-                       "flex flex-col items-center justify-center p-2 rounded text-white font-bold text-sm active:scale-95 transition-transform shadow-lg h-14 w-full",
-                       interactionMode === 'SELECTING_TARGET_SET' ? "bg-yellow-600 animate-pulse" : "bg-blue-700"
-                     )}
-                   >
-                     <PlayCircle size={20} className="mb-1" />
-                     <span className="text-[10px]">{interactionMode === 'SELECTING_TARGET_SET' ? 'SELECT...' : 'ADD TO'}</span>
                    </button>
               </div>
             </div>
           );
         };
 
+        /*******************************************************
+         * COMPONENT: GAME BOARD
+         *******************************************************/
         const GameBoard = ({ 
             sets, 
             interactionMode, 
             gamePhase,
             setupState,
             draggedTileId,
+            hasSelectedTiles,
             onSetClick, 
             onToggleReorder,
             onResetBoard,
@@ -692,14 +714,15 @@
             onSetDragStart,
             onSetRotate,
             onCycleRotate,
-            onResetRotate
+            onResetRotate,
+            onCompactBoard
         }) => {
           const isReordering = interactionMode === 'REORDER_BOARD';
-          const boardRef = useRef(null);
-          const [boardScale, setBoardScale] = useState(1);
+          const boardRef = React.useRef(null);
+          const [boardScale, setBoardScale] = React.useState(1);
           const allSetsValid = sets.every(s => isValidSet(s.tiles));
 
-          useEffect(() => {
+          React.useEffect(() => {
               if (sets.length === 0) {
                   setBoardScale(1);
                   return;
@@ -713,8 +736,8 @@
                   if (distX > maxDistX) maxDistX = distX;
                   if (distY > maxDistY) maxDistY = distY;
               });
-              const safeWidth = (window.innerWidth / 2) - 60; 
-              const safeHeight = (window.innerHeight / 2) - 110;
+              const safeWidth = (window.innerWidth / 2) - 80; 
+              const safeHeight = (window.innerHeight / 2) - 120;
               let scaleX = 1;
               let scaleY = 1;
               if (maxDistX > safeWidth) scaleX = safeWidth / maxDistX;
@@ -728,21 +751,12 @@
                      <div className="absolute inset-0 opacity-20 pointer-events-none z-0" style={{ backgroundImage: 'radial-gradient(#ffffff 1px, transparent 1px)', backgroundSize: '20px 20px' }}></div>
                      <div className="relative w-64 h-64 flex items-center justify-center">
                          {[...Array(6)].map((_, i) => (
-                             <div 
-                                key={i}
-                                className="absolute w-12 h-16 bg-rummy-tile shadow-tile border border-gray-300 rounded"
-                                style={{ 
-                                    transform: `rotate(${Math.random() * 360}deg) translate(${Math.random() * 40 - 20}px, ${Math.random() * 40 - 20}px)`,
-                                    zIndex: 0
-                                }}
-                             />
+                             <div key={i} className="absolute w-12 h-16 bg-rummy-tile shadow-tile border border-gray-300 rounded"
+                                style={{ transform: `rotate(${Math.random() * 360}deg) translate(${Math.random() * 40 - 20}px, ${Math.random() * 40 - 20}px)`, zIndex: 0 }} />
                          ))}
                          {setupState.topCard && setupState.bottomCard && (
-                             <button 
-                                onClick={onStartGame}
-                                className="absolute z-50 bg-green-600 text-white font-bold text-xl px-8 py-4 rounded-full shadow-2xl animate-bounce flex items-center gap-2 hover:bg-green-500 transition-colors"
-                             >
-                                 <Play fill="currentColor" /> Start Game
+                             <button onClick={onStartGame} className="absolute z-50 bg-green-600 text-white font-bold text-xl px-8 py-4 rounded-full shadow-2xl animate-bounce flex items-center gap-2 hover:bg-green-500 transition-colors">
+                                 <Icons.Play fill="currentColor" /> Start Game
                              </button>
                          )}
                      </div>
@@ -750,24 +764,14 @@
                          {setupState.topCard ? (
                              <div className="scale-150"><Tile tile={setupState.topCard} /></div>
                          ) : (
-                             <button 
-                                onClick={() => onSetupDraw('TOP')}
-                                className="bg-gray-800 text-white px-6 py-3 rounded-lg shadow-xl font-bold active:scale-95 transition-transform"
-                             >
-                                 Draw for Start
-                             </button>
+                             <button onClick={() => onSetupDraw('TOP')} className="bg-gray-800 text-white px-6 py-3 rounded-lg shadow-xl font-bold active:scale-95 transition-transform">Draw for Start</button>
                          )}
                      </div>
                      <div className="absolute bottom-20 flex flex-col items-center gap-4">
                          {setupState.bottomCard ? (
                              <div className="scale-150"><Tile tile={setupState.bottomCard} /></div>
                          ) : (
-                             <button 
-                                onClick={() => onSetupDraw('BOTTOM')}
-                                className="bg-gray-800 text-white px-6 py-3 rounded-lg shadow-xl font-bold active:scale-95 transition-transform"
-                             >
-                                 Draw for Start
-                             </button>
+                             <button onClick={() => onSetupDraw('BOTTOM')} className="bg-gray-800 text-white px-6 py-3 rounded-lg shadow-xl font-bold active:scale-95 transition-transform">Draw for Start</button>
                          )}
                      </div>
                   </div>
@@ -775,70 +779,46 @@
           }
 
           return (
-            <div 
-                id="game-board-container"
-                ref={boardRef}
-                className="flex-1 bg-rummy-board relative overflow-hidden flex flex-col shadow-inner select-none"
-                style={{ touchAction: isReordering ? 'none' : 'auto' }}
-            >
+            <div id="game-board-container" ref={boardRef} className="flex-1 bg-rummy-board relative overflow-hidden flex flex-col shadow-inner select-none" style={{ touchAction: isReordering ? 'none' : 'auto' }}>
               <div className="absolute inset-0 opacity-20 pointer-events-none z-0" style={{ backgroundImage: 'radial-gradient(#ffffff 1px, transparent 1px)', backgroundSize: '20px 20px' }}></div>
-              <div className="absolute top-1/2 right-0 transform -translate-y-1/2 translate-x-1/2 z-20 rotate-90 origin-center flex flex-col items-center">
-                  <div className="flex gap-4 p-4 bg-gray-900/50 backdrop-blur-md rounded-2xl shadow-2xl border border-white/10">
+              <div className="absolute top-1/2 left-0 transform -translate-y-1/2 -translate-x-1/2 z-20 -rotate-90 origin-center flex flex-col items-center">
+                <div className="flex gap-4 p-4 bg-gray-900/50 backdrop-blur-md rounded-2xl shadow-2xl border border-white/10">
                     {!isReordering && (
-                        <button
-                            onClick={(e) => { e.stopPropagation(); onResetGame(); }}
-                            className="flex flex-col items-center justify-center gap-1 w-16 h-16 rounded-xl shadow-lg font-bold transition-all bg-gray-800 text-white hover:bg-gray-700 border border-gray-600 active:scale-95"
-                            title="Start New Game"
-                        >
-                            <Trash2 size={24} />
+                        <button onClick={(e) => { e.stopPropagation(); onResetGame(); }} className="flex flex-col items-center justify-center gap-1 w-16 h-16 rounded-xl shadow-lg font-bold transition-all bg-gray-800 text-white hover:bg-gray-700 border border-gray-600 active:scale-95" title="Start New Game">
+                            <Icons.Trash2 size={24} />
                             <span className="text-[10px] leading-none text-center">NEW<br/>GAME</span>
                         </button>
                     )}
+                </div>
+              </div>
+              <div className="absolute top-1/2 right-0 transform -translate-y-1/2 translate-x-1/2 z-20 rotate-90 origin-center flex flex-col items-center">
+                  <div className="flex gap-4 p-4 bg-gray-900/50 backdrop-blur-md rounded-2xl shadow-2xl border border-white/10">
                     {isReordering && (
-                        <button
-                            onClick={(e) => { e.stopPropagation(); onResetBoard(); }}
-                            className="flex flex-col items-center justify-center gap-1 w-16 h-16 rounded-xl shadow-lg font-bold transition-all bg-yellow-600 text-white hover:bg-yellow-500 active:scale-95"
-                        >
-                            <RotateCcw size={24} />
+                        <button onClick={(e) => { e.stopPropagation(); onResetBoard(); }} className="flex flex-col items-center justify-center gap-1 w-16 h-16 rounded-xl shadow-lg font-bold transition-all bg-yellow-600 text-white hover:bg-yellow-500 active:scale-95">
+                            <Icons.RotateCcw size={24} />
                             <span className="text-[10px] leading-none">RESET</span>
                         </button>
                     )}
-                    <button 
-                        onClick={(e) => { e.stopPropagation(); onToggleReorder(); }}
-                        className={clsx(
-                            "flex flex-col items-center justify-center gap-1 w-16 h-16 rounded-xl shadow-lg font-bold transition-all active:scale-95",
-                            isReordering 
-                                ? (allSetsValid ? "bg-green-600 text-white hover:bg-green-500" : "bg-red-600 text-white hover:bg-red-500 animate-pulse")
-                                : "bg-blue-600 text-white hover:bg-blue-500"
-                        )}
-                    >
-                        <Move size={24} />
+                    <button onClick={(e) => { e.stopPropagation(); onToggleReorder(); }} className={clsx("flex flex-col items-center justify-center gap-1 w-16 h-16 rounded-xl shadow-lg font-bold transition-all active:scale-95", isReordering ? (allSetsValid ? "bg-green-600 text-white hover:bg-green-500" : "bg-red-600 text-white hover:bg-red-500 animate-pulse") : "bg-blue-600 text-white hover:bg-blue-500")}>
+                        <Icons.Move size={24} />
                         <span className="text-[10px] leading-none text-center">{isReordering ? "DONE" : "REORDER"}</span>
                     </button>
-                    <button
-                        onClick={(e) => { e.stopPropagation(); onCycleRotate(); }}
-                        className="flex flex-col items-center justify-center gap-1 w-16 h-16 rounded-xl shadow-lg font-bold transition-all bg-indigo-600 text-white hover:bg-indigo-500 active:scale-95"
-                        title="Cycle Orientation"
-                    >
-                        <Repeat size={24} />
-                        <span className="text-[10px] leading-none text-center">CYCLE<br/>ROT.</span>
+                    <button onClick={(e) => { e.stopPropagation(); onResetRotate(); }} className="flex flex-col items-center justify-center gap-1 w-16 h-16 rounded-xl shadow-lg font-bold transition-all bg-purple-600 text-white hover:bg-purple-500 active:scale-95" title="Reset Orientation">
+                        <Icons.History size={24} />
+                        <span className="text-[10px] leading-none text-center">FIX<br/>ROT</span>
                     </button>
-                     <button
-                        onClick={(e) => { e.stopPropagation(); onResetRotate(); }}
-                        className="flex flex-col items-center justify-center gap-1 w-16 h-16 rounded-xl shadow-lg font-bold transition-all bg-gray-700 text-white hover:bg-gray-600 active:scale-95"
-                        title="Reset Rotation"
-                    >
-                        <History size={24} />
-                        <span className="text-[10px] leading-none text-center">RESET<br/>ROT.</span>
+                    <button onClick={(e) => { e.stopPropagation(); onCycleRotate(); }} className="flex flex-col items-center justify-center gap-1 w-16 h-16 rounded-xl shadow-lg font-bold transition-all bg-indigo-600 text-white hover:bg-indigo-500 active:scale-95" title="Rotate Orientation">
+                        <Icons.Repeat size={24} />
+                        <span className="text-[10px] leading-none text-center">ROTATE</span>
+                    </button>
+                     <button onClick={(e) => { e.stopPropagation(); onCompactBoard(); }} className="flex flex-col items-center justify-center gap-1 w-16 h-16 rounded-xl shadow-lg font-bold transition-all bg-yellow-500 text-black hover:bg-yellow-400 active:scale-95" title="Compact Board">
+                        <Icons.Minimize2 size={24} />
+                        <span className="text-[10px] leading-none text-center">COMPACT</span>
                     </button>
                   </div>
               </div>
 
-              <div 
-                id="game-board" 
-                className="absolute left-1/2 top-1/2 w-0 h-0 overflow-visible z-10 transition-transform duration-500 ease-out"
-                style={{ transform: `scale(${boardScale})` }}
-              >
+              <div id="game-board" className="absolute left-1/2 top-1/2 w-0 h-0 overflow-visible z-10 transition-transform duration-500 ease-out" style={{ transform: `scale(${boardScale})` }}>
                 {sets.map((set) => {
                     const isValid = isValidSet(set.tiles);
                     const baseRotation = set.orientation === 'TOP' ? 180 : 0;
@@ -847,57 +827,22 @@
                     const y = set.y || 0;
                     
                     return (
-                      <div 
-                        key={set.id}
-                        data-set-id={set.id}
-                        onPointerUp={() => (interactionMode === 'SELECTING_TARGET_SET' || interactionMode === 'REORDER_BOARD') ? onSetClick(set.id) : undefined}
-                        style={{
-                            transform: `translate(-50%, -50%) translate(${x}px, ${y}px) rotate(${baseRotation + randomRotation}deg)`,
-                            position: 'absolute',
-                            left: 0,
-                            top: 0
-                        }}
-                        className={clsx(
-                          "bg-black/10 rounded-xl p-3 flex gap-1 transition-colors duration-200 border-2 items-center min-w-max",
-                          interactionMode === 'SELECTING_TARGET_SET' 
-                            ? "cursor-pointer hover:bg-white/10 border-yellow-400 animate-pulse shadow-[0_0_15px_rgba(250,204,21,0.5)]" 
-                            : (isReordering 
-                                ? (isValid ? "border-white/50 border-dashed" : "border-red-500 bg-red-900/20 border-dashed") 
-                                : "border-transparent"),
+                      <div key={set.id} data-set-id={set.id} onPointerUp={() => onSetClick(set.id)}
+                        onPointerDown={(e) => { if (!isReordering && !hasSelectedTiles) onSetDragStart(e, set.id); }}
+                        style={{ transform: `translate(-50%, -50%) translate(${x}px, ${y}px) rotate(${baseRotation + randomRotation}deg)`, position: 'absolute', left: 0, top: 0 }}
+                        className={clsx("bg-black/10 rounded-xl p-3 flex gap-1 transition-colors duration-200 border-2 items-center min-w-max",
+                          isReordering ? (isValid ? "border-white/50 border-dashed" : "border-red-500 bg-red-900/20 border-dashed") : (!hasSelectedTiles ? "border-transparent hover:bg-white/5 cursor-move" : "border-transparent hover:bg-white/5") 
                         )}
                       >
                         {isReordering && (
                             <>
-                                <div 
-                                    onPointerDown={(e) => onSetDragStart(e, set.id)}
-                                    className="absolute -top-10 left-1/2 -translate-x-[120%] w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center shadow-lg cursor-move active:scale-95 transition-transform z-30"
-                                >
-                                    <Move size={20} className="text-white" />
-                                </div>
-                                <div 
-                                    onPointerDown={(e) => { e.stopPropagation(); onSetRotate(set.id); }}
-                                    className="absolute -top-10 left-1/2 translate-x-[20%] w-10 h-10 bg-yellow-600 rounded-full flex items-center justify-center shadow-lg cursor-pointer active:scale-95 transition-transform z-30"
-                                >
-                                    <RotateCcw size={20} className="text-white" />
-                                </div>
+                                <div onPointerDown={(e) => onSetDragStart(e, set.id)} className="absolute -top-10 left-1/2 -translate-x-[120%] w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center shadow-lg cursor-move active:scale-95 transition-transform z-30"><Icons.Move size={20} className="text-white" /></div>
+                                <div onPointerDown={(e) => { e.stopPropagation(); onSetRotate(set.id); }} className="absolute -top-10 left-1/2 translate-x-[20%] w-10 h-10 bg-yellow-600 rounded-full flex items-center justify-center shadow-lg cursor-pointer active:scale-95 transition-transform z-30"><Icons.RotateCcw size={20} className="text-white" /></div>
                             </>
                         )}
-
                         {set.tiles.map((tile) => (
-                          <div 
-                            key={tile.id}
-                            onPointerDown={(e) => {
-                                if (isReordering) {
-                                    onDragStart(e, tile, set.id);
-                                }
-                            }}
-                            className={clsx(isReordering ? "cursor-grab active:cursor-grabbing" : "")}
-                          >
-                              <Tile 
-                                tile={tile} 
-                                size="md"
-                                isDragging={draggedTileId === tile.id}
-                              />
+                          <div key={tile.id} onPointerDown={(e) => { if (isReordering) onDragStart(e, tile, set.id); }} className={clsx(isReordering ? "cursor-grab active:cursor-grabbing" : "")}>
+                              <Tile tile={tile} size="md" isDragging={draggedTileId === tile.id} />
                           </div>
                         ))}
                       </div>
@@ -908,10 +853,9 @@
           );
         };
 
-        // ----------------------------------------------------------------------
-        // 6. MAIN APP
-        // ----------------------------------------------------------------------
-
+        /*******************************************************
+         * APP COMPONENT
+         *******************************************************/
         const DEFAULT_STATE = {
             gamePhase: 'SETUP',
             deck: [],
@@ -926,83 +870,49 @@
             activePlayer: null,
             interactionMode: 'IDLE',
             dragState: {
-                isDragging: false,
-                tileId: null,
-                sourceSetId: null,
-                x: 0,
-                y: 0,
-                startX: 0,
-                startY: 0,
-                tileData: null,
-                draggingSetId: null,
-                initialSetPos: null
+                isDragging: false, tileId: null, sourceSetId: null, x: 0, y: 0, startX: 0, startY: 0, tileData: null, draggingSetId: null, initialSetPos: null
             },
-            setupState: {
-                topCard: null,
-                bottomCard: null
-            },
-            lastDrawnTileId: {
-                TOP: null,
-                BOTTOM: null
-            }
+            setupState: { topCard: null, bottomCard: null },
+            lastDrawnTileId: { TOP: null, BOTTOM: null }
         };
 
         const App = () => {
-          const [gameState, setGameState] = useState(() => {
+          const [gameState, setGameState] = React.useState(() => {
               const saved = localStorage.getItem('rummikub_state');
               if (saved) {
                   try {
                       const parsed = JSON.parse(saved);
                       if (parsed.board) {
-                          parsed.board = parsed.board.map((s) => ({
-                              ...s,
-                              x: s.x ?? 0,
-                              y: s.y ?? 0,
-                              createdBy: s.createdBy ?? s.orientation 
-                          }));
+                          parsed.board = parsed.board.map((s) => ({ ...s, x: s.x ?? 0, y: s.y ?? 0, createdBy: s.createdBy ?? s.orientation }));
                       }
                       ['playerTopHand', 'playerBottomHand'].forEach(key => {
-                          if (parsed[key]) {
-                              parsed[key] = sortHand(parsed[key], 'RUN'); 
-                          }
+                          if (parsed[key]) parsed[key] = sortHand(parsed[key], 'RUN'); 
                       });
                       return parsed;
-                  } catch (e) {
-                      console.error("Failed to load state", e);
-                  }
+                  } catch (e) { console.error("Failed to load state", e); }
               }
               return DEFAULT_STATE;
           });
 
-          const [showNewGameModal, setShowNewGameModal] = useState(false);
-          const dragOffsetRef = useRef({ x: 0, y: 0 });
+          const [showNewGameModal, setShowNewGameModal] = React.useState(false);
+          const dragOffsetRef = React.useRef({ x: 0, y: 0 });
 
-          useEffect(() => {
+          React.useEffect(() => {
               localStorage.setItem('rummikub_state', JSON.stringify(gameState));
           }, [gameState]);
 
-          useEffect(() => {
+          React.useEffect(() => {
             if (gameState.deck.length === 0 && gameState.gamePhase === 'SETUP' && !gameState.setupState.topCard) {
-                const deck = generateDeck();
-                setGameState(prev => ({ ...prev, deck }));
+                setGameState(prev => ({ ...prev, deck: generateDeck() }));
             }
           }, []);
 
           const getRandomRotation = () => (Math.random() * 4) - 2;
 
-          const handleResetGame = () => {
-              setShowNewGameModal(true);
-          };
-
+          const handleResetGame = () => setShowNewGameModal(true);
           const confirmNewGameReset = () => {
               localStorage.removeItem('rummikub_state');
-              const newDeck = generateDeck();
-              setGameState({
-                  ...DEFAULT_STATE,
-                  deck: newDeck,
-                  gamePhase: 'SETUP',
-                  setupState: { topCard: null, bottomCard: null }
-              });
+              setGameState({ ...DEFAULT_STATE, deck: generateDeck(), gamePhase: 'SETUP', setupState: { topCard: null, bottomCard: null } });
               setShowNewGameModal(false);
           };
 
@@ -1011,19 +921,11 @@
                   if (prev.gamePhase !== 'SETUP') return prev;
                   if (pid === 'TOP' && prev.setupState.topCard) return prev;
                   if (pid === 'BOTTOM' && prev.setupState.bottomCard) return prev;
-
                   const newDeck = [...prev.deck];
-                  const randomIndex = Math.floor(Math.random() * newDeck.length);
-                  const drawnTile = newDeck.splice(randomIndex, 1)[0];
-
+                  const drawnTile = newDeck.splice(Math.floor(Math.random() * newDeck.length), 1)[0];
                   return {
-                      ...prev,
-                      deck: newDeck,
-                      setupState: {
-                          ...prev.setupState,
-                          topCard: pid === 'TOP' ? drawnTile : prev.setupState.topCard,
-                          bottomCard: pid === 'BOTTOM' ? drawnTile : prev.setupState.bottomCard
-                      }
+                      ...prev, deck: newDeck,
+                      setupState: { ...prev.setupState, topCard: pid === 'TOP' ? drawnTile : prev.setupState.topCard, bottomCard: pid === 'BOTTOM' ? drawnTile : prev.setupState.bottomCard }
                   };
               });
           };
@@ -1032,11 +934,8 @@
               const fullDeck = generateDeck();
               const hand1 = fullDeck.splice(0, 14);
               const hand2 = fullDeck.splice(0, 14);
-
               setGameState(prev => ({
-                  ...prev,
-                  gamePhase: 'PLAYING',
-                  deck: fullDeck,
+                  ...prev, gamePhase: 'PLAYING', deck: fullDeck,
                   playerTopHand: sortHand(hand1, prev.playerTopSort),
                   playerBottomHand: sortHand(hand2, prev.playerBottomSort),
                   setupState: { topCard: null, bottomCard: null },
@@ -1048,25 +947,8 @@
             e.preventDefault();
             e.stopPropagation();
             const rect = e.currentTarget.getBoundingClientRect();
-            dragOffsetRef.current = {
-                x: e.clientX - rect.left,
-                y: e.clientY - rect.top
-            };
-            setGameState(prev => ({
-                ...prev,
-                dragState: {
-                    ...prev.dragState,
-                    isDragging: false,
-                    tileId: tile.id,
-                    sourceSetId,
-                    x: e.clientX,
-                    y: e.clientY,
-                    startX: e.clientX,
-                    startY: e.clientY,
-                    tileData: tile,
-                    draggingSetId: null
-                }
-            }));
+            dragOffsetRef.current = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+            setGameState(prev => ({ ...prev, dragState: { ...prev.dragState, isDragging: false, tileId: tile.id, sourceSetId, x: e.clientX, y: e.clientY, startX: e.clientX, startY: e.clientY, tileData: tile, draggingSetId: null } }));
           };
 
           const handleSetDragStart = (e, setId) => {
@@ -1074,45 +956,18 @@
               e.stopPropagation();
               const set = gameState.board.find(s => s.id === setId);
               if (!set) return;
-              setGameState(prev => ({
-                  ...prev,
-                  dragState: {
-                      ...prev.dragState,
-                      isDragging: true,
-                      draggingSetId: setId,
-                      tileId: null,
-                      initialSetPos: { x: set.x, y: set.y },
-                      startX: e.clientX,
-                      startY: e.clientY,
-                      x: e.clientX,
-                      y: e.clientY
-                  }
-              }));
+              setGameState(prev => ({ ...prev, dragState: { ...prev.dragState, isDragging: true, draggingSetId: setId, tileId: null, initialSetPos: { x: set.x, y: set.y }, startX: e.clientX, startY: e.clientY, x: e.clientX, y: e.clientY } }));
           };
 
           const handleSetRotate = (setId) => {
-              setGameState(prev => ({
-                  ...prev,
-                  board: prev.board.map(s => {
-                      if (s.id === setId) {
-                          return {
-                              ...s,
-                              orientation: s.orientation === 'TOP' ? 'BOTTOM' : 'TOP'
-                          };
-                      }
-                      return s;
-                  })
-              }));
+              setGameState(prev => ({ ...prev, board: prev.board.map(s => s.id === setId ? { ...s, orientation: s.orientation === 'TOP' ? 'BOTTOM' : 'TOP' } : s) }));
           };
 
           const handleCycleRotate = () => {
             setGameState(prev => {
                 const topCount = prev.board.filter(s => s.orientation === 'TOP').length;
                 const target = topCount > prev.board.length / 2 ? 'BOTTOM' : 'TOP';
-                return {
-                    ...prev,
-                    board: prev.board.map(s => ({ ...s, orientation: target }))
-                };
+                return { ...prev, board: prev.board.map(s => ({ ...s, orientation: target })) };
             });
           };
 
@@ -1126,55 +981,41 @@
             }));
           };
 
+          const handleCompactBoard = () => {
+              setGameState(prev => ({ ...prev, board: compactBoardLogic(prev.board) }));
+          };
+
           const handlePointerMove = (e) => {
             const { tileId, isDragging, startX, startY, draggingSetId, initialSetPos } = gameState.dragState;
             e.preventDefault();
-
             if (isDragging && draggingSetId && initialSetPos) {
                 const dx = e.clientX - startX;
                 const dy = e.clientY - startY;
                 setGameState(prev => ({
-                    ...prev,
-                    board: prev.board.map(s => {
-                        if (s.id === draggingSetId) {
-                            return { ...s, x: initialSetPos.x + dx, y: initialSetPos.y + dy };
-                        }
-                        return s;
-                    }),
+                    ...prev, board: prev.board.map(s => s.id === draggingSetId ? { ...s, x: initialSetPos.x + dx, y: initialSetPos.y + dy } : s),
                     dragState: { ...prev.dragState, x: e.clientX, y: e.clientY }
                 }));
                 return;
             }
-
             if (tileId) {
                 if (!isDragging) {
-                    const dist = Math.hypot(e.clientX - startX, e.clientY - startY);
-                    if (dist > 5) { 
-                        setGameState(prev => ({
-                            ...prev,
-                            dragState: { ...prev.dragState, isDragging: true, x: e.clientX, y: e.clientY }
-                        }));
+                    if (Math.hypot(e.clientX - startX, e.clientY - startY) > 5) {
+                        setGameState(prev => ({ ...prev, dragState: { ...prev.dragState, isDragging: true, x: e.clientX, y: e.clientY } }));
                     }
                 } else {
-                    setGameState(prev => ({
-                        ...prev,
-                        dragState: { ...prev.dragState, x: e.clientX, y: e.clientY }
-                    }));
+                    setGameState(prev => ({ ...prev, dragState: { ...prev.dragState, x: e.clientX, y: e.clientY } }));
                 }
             }
           };
 
           const handlePointerUp = (e) => {
             const { isDragging, tileId, tileData, sourceSetId, draggingSetId } = gameState.dragState;
-            const resetDrag = {
-                isDragging: false, tileId: null, sourceSetId: null, x: 0, y: 0, startX: 0, startY: 0, tileData: null, draggingSetId: null, initialSetPos: null
-            };
+            const resetDrag = { isDragging: false, tileId: null, sourceSetId: null, x: 0, y: 0, startX: 0, startY: 0, tileData: null, draggingSetId: null, initialSetPos: null };
 
             if (draggingSetId) {
                 setGameState(prev => ({ ...prev, dragState: resetDrag }));
                 return;
             }
-
             if (!tileId || !tileData) {
                 setGameState(prev => ({ ...prev, dragState: resetDrag }));
                 return;
@@ -1182,9 +1023,7 @@
 
             if (!isDragging) {
                 const owner = sourceSetId?.includes('TOP') ? 'TOP' : (sourceSetId?.includes('BOTTOM') ? 'BOTTOM' : null);
-                if (owner) {
-                    handleTileClick(tileId, owner);
-                }
+                if (owner) handleTileClick(tileId, owner);
                 setGameState(prev => ({ ...prev, dragState: resetDrag }));
                 return;
             }
@@ -1201,17 +1040,14 @@
                      const isTop = targetRackId === 'TOP';
                      const currentHand = isTop ? [...prev.playerTopHand] : [...prev.playerBottomHand];
                      let updatedHand = currentHand.filter(t => t.id !== tileId);
-                     
-                     let newX = 0;
-                     let newY = 0;
+                     let newX = 0, newY = 0;
 
                      if (targetSlotElement) {
                          newX = parseInt(targetSlotElement.getAttribute('data-slot-x') || '0');
                          newY = parseInt(targetSlotElement.getAttribute('data-slot-y') || '0');
                      } else {
                          const pos = findFreeRackSlot(updatedHand);
-                         newX = pos.x;
-                         newY = pos.y;
+                         newX = pos.x; newY = pos.y;
                      }
 
                      const existingOccupantIndex = updatedHand.findIndex(t => t.rackX === newX && t.rackY === newY);
@@ -1220,23 +1056,17 @@
                      if (existingOccupantIndex !== -1) {
                          const occupant = updatedHand[existingOccupantIndex];
                          updatedHand.splice(existingOccupantIndex, 1);
-                         
                          const occupiedSet = new Set();
                          occupiedSet.add(`${newX},${newY}`);
                          updatedHand.forEach(t => occupiedSet.add(`${t.rackX},${t.rackY}`));
-
                          let freeX = 0, freeY = 0;
                          const dynCols = Math.max(10, Math.ceil(updatedHand.length / (updatedHand.length > 20 ? 3 : 2)));
                          outerLoop: for(let r=0; r<3; r++) { 
                              for(let c=0; c<dynCols+2; c++) {
-                                 if (!occupiedSet.has(`${c},${r}`)) {
-                                     freeX = c; freeY = r;
-                                     break outerLoop;
-                                 }
+                                 if (!occupiedSet.has(`${c},${r}`)) { freeX = c; freeY = r; break outerLoop; }
                              }
                          }
-                         occupant.rackX = freeX;
-                         occupant.rackY = freeY;
+                         occupant.rackX = freeX; occupant.rackY = freeY;
                          updatedHand.push(occupant);
                          updatedHand.push(tileToPlace);
                      } else {
@@ -1248,25 +1078,11 @@
                          const setIndex = newBoard.findIndex(s => s.id === sourceSetId);
                          if (setIndex !== -1) {
                              const setTiles = newBoard[setIndex].tiles.filter(t => t.id !== tileId);
-                             if (setTiles.length === 0) {
-                                 newBoard.splice(setIndex, 1);
-                             } else {
-                                 newBoard[setIndex] = { ...newBoard[setIndex], tiles: setTiles };
-                             }
+                             if (setTiles.length === 0) newBoard.splice(setIndex, 1);
+                             else newBoard[setIndex] = { ...newBoard[setIndex], tiles: setTiles };
                          }
                      }
-
-                     return {
-                         ...prev,
-                         board: newBoard,
-                         playerTopHand: isTop ? updatedHand : prev.playerTopHand,
-                         playerBottomHand: !isTop ? updatedHand : prev.playerBottomHand,
-                         dragState: resetDrag,
-                         lastDrawnTileId: {
-                             ...prev.lastDrawnTileId,
-                             [isTop ? 'TOP' : 'BOTTOM']: null
-                         }
-                     };
+                     return { ...prev, board: newBoard, playerTopHand: isTop ? updatedHand : prev.playerTopHand, playerBottomHand: !isTop ? updatedHand : prev.playerBottomHand, dragState: resetDrag, lastDrawnTileId: { ...prev.lastDrawnTileId, [isTop ? 'TOP' : 'BOTTOM']: null } };
                 }
 
                 if (prev.interactionMode === 'REORDER_BOARD') {
@@ -1277,22 +1093,14 @@
                     
                     if (sourceSetId && sourceSetId.startsWith('RACK_')) {
                         sourceWasRack = true;
-                        const isTop = sourceSetId === 'RACK_TOP';
-                        if (isTop) {
-                            newTopHand = newTopHand.filter(t => t.id !== tileId);
-                        } else {
-                            newBottomHand = newBottomHand.filter(t => t.id !== tileId);
-                        }
+                        if (sourceSetId === 'RACK_TOP') newTopHand = newTopHand.filter(t => t.id !== tileId);
+                        else newBottomHand = newBottomHand.filter(t => t.id !== tileId);
                     } else {
                         const sourceSetIndex = newBoard.findIndex(s => s.id === sourceSetId);
                         if (sourceSetIndex !== -1) {
-                            let sourceTiles = [...newBoard[sourceSetIndex].tiles];
-                            sourceTiles = sourceTiles.filter(t => t.id !== tileId);
-                            if (sourceTiles.length === 0) {
-                                newBoard.splice(sourceSetIndex, 1);
-                            } else {
-                                newBoard[sourceSetIndex] = { ...newBoard[sourceSetIndex], tiles: sourceTiles };
-                            }
+                            let sourceTiles = newBoard[sourceSetIndex].tiles.filter(t => t.id !== tileId);
+                            if (sourceTiles.length === 0) newBoard.splice(sourceSetIndex, 1);
+                            else newBoard[sourceSetIndex] = { ...newBoard[sourceSetIndex], tiles: sourceTiles };
                         }
                     }
 
@@ -1305,64 +1113,29 @@
                         }
                     } else {
                         const boardEl = document.getElementById('game-board-container');
-                        let dropX = 0;
-                        let dropY = 0;
+                        let dropX = 0, dropY = 0;
                         if (boardEl) {
                             const rect = boardEl.getBoundingClientRect();
-                            const centerX = rect.left + rect.width / 2;
-                            const centerY = rect.top + rect.height / 2;
-                            dropX = e.clientX - centerX;
-                            dropY = e.clientY - centerY;
+                            dropX = e.clientX - (rect.left + rect.width / 2);
+                            dropY = e.clientY - (rect.top + rect.height / 2);
                         }
-                        let orientation = 'BOTTOM';
-                        if (sourceWasRack) {
-                            orientation = sourceSetId === 'RACK_TOP' ? 'TOP' : 'BOTTOM';
-                        }
-                        newBoard.push({ 
-                            id: uuidv4(), 
-                            tiles: [tileData], 
-                            orientation: orientation,
-                            createdBy: orientation,
-                            rotation: getRandomRotation(),
-                            x: dropX,
-                            y: dropY
-                        });
+                        let orientation = (sourceWasRack && sourceSetId === 'RACK_TOP') ? 'TOP' : 'BOTTOM';
+                        newBoard.push({ id: uuidv4(), tiles: [tileData], orientation: orientation, createdBy: orientation, rotation: getRandomRotation(), x: dropX, y: dropY });
                     }
-
-                    return {
-                        ...prev,
-                        board: newBoard,
-                        playerTopHand: newTopHand,
-                        playerBottomHand: newBottomHand,
-                        dragState: resetDrag
-                    };
+                    return { ...prev, board: newBoard, playerTopHand: newTopHand, playerBottomHand: newBottomHand, dragState: resetDrag };
                 }
-
                 return { ...prev, dragState: resetDrag };
             });
           };
 
-          const getActiveHand = useCallback((pid) => {
-            return pid === 'TOP' ? gameState.playerTopHand : gameState.playerBottomHand;
-          }, [gameState.playerTopHand, gameState.playerBottomHand]);
+          const getActiveHand = React.useCallback((pid) => pid === 'TOP' ? gameState.playerTopHand : gameState.playerBottomHand, [gameState.playerTopHand, gameState.playerBottomHand]);
 
           const handleTileClick = (tileId, owner) => {
             setGameState(prev => {
               const isSelected = prev.selectedTileIds.includes(tileId);
-              let newSelection = isSelected 
-                ? prev.selectedTileIds.filter(id => id !== tileId)
-                : [...prev.selectedTileIds, tileId];
-
-              if (prev.activePlayer && prev.activePlayer !== owner) {
-                  newSelection = [tileId];
-              }
-
-              return {
-                ...prev,
-                activePlayer: owner,
-                selectedTileIds: newSelection,
-                interactionMode: prev.interactionMode === 'REORDER_BOARD' ? 'REORDER_BOARD' : 'IDLE'
-              };
+              let newSelection = isSelected ? prev.selectedTileIds.filter(id => id !== tileId) : [...prev.selectedTileIds, tileId];
+              if (prev.activePlayer && prev.activePlayer !== owner) newSelection = [tileId];
+              return { ...prev, activePlayer: owner, selectedTileIds: newSelection };
             });
           };
 
@@ -1386,17 +1159,12 @@
                 const drawnTile = newDeck.pop();
                 const hand = pid === 'TOP' ? prev.playerTopHand : prev.playerBottomHand;
                 const pos = findFreeRackSlot(hand);
-                drawnTile.rackX = pos.x;
-                drawnTile.rackY = pos.y;
-                const newHand = [...hand, drawnTile];
-
+                drawnTile.rackX = pos.x; drawnTile.rackY = pos.y;
                 return {
-                    ...prev,
-                    deck: newDeck,
-                    playerTopHand: pid === 'TOP' ? newHand : prev.playerTopHand,
-                    playerBottomHand: pid === 'BOTTOM' ? newHand : prev.playerBottomHand,
-                    activePlayer: pid,
-                    lastDrawnTileId: { ...prev.lastDrawnTileId, [pid]: drawnTile.id }
+                    ...prev, deck: newDeck,
+                    playerTopHand: pid === 'TOP' ? [...hand, drawnTile] : prev.playerTopHand,
+                    playerBottomHand: pid === 'BOTTOM' ? [...hand, drawnTile] : prev.playerBottomHand,
+                    activePlayer: pid, lastDrawnTileId: { ...prev.lastDrawnTileId, [pid]: drawnTile.id }
                 };
             });
           };
@@ -1405,225 +1173,80 @@
             const hand = getActiveHand(pid);
             const selectedTiles = hand.filter(t => gameState.selectedTileIds.includes(t.id));
             if (selectedTiles.length === 0) return;
-
-            let candidateSet = sortTiles(selectedTiles, 'RUN');
-            let isValid = isValidSet(candidateSet);
-            if (!isValid) {
-                candidateSet = sortTiles(selectedTiles, 'GROUP');
-                isValid = isValidSet(candidateSet);
-            }
-
-            const allowPlay = isValid || gameState.interactionMode === 'REORDER_BOARD';
-            if (allowPlay) {
+            const candidateSet = autoSortSet(selectedTiles, gameState.interactionMode !== 'REORDER_BOARD');
+            if (candidateSet) {
                 const newHand = hand.filter(t => !gameState.selectedTileIds.includes(t.id));
                 const pos = findFreePosition(gameState.board, candidateSet.length);
                 setGameState(prev => ({
-                    ...prev,
-                    board: [...prev.board, { 
-                        id: uuidv4(), 
-                        tiles: candidateSet, 
-                        orientation: pid,
-                        createdBy: pid,
-                        rotation: getRandomRotation(),
-                        x: pos.x,
-                        y: pos.y
-                    }],
-                    selectedTileIds: [],
-                    playerTopHand: pid === 'TOP' ? newHand : prev.playerTopHand,
-                    playerBottomHand: pid === 'BOTTOM' ? newHand : prev.playerBottomHand,
-                    activePlayer: pid,
-                    lastDrawnTileId: { ...prev.lastDrawnTileId, [pid]: null }
+                    ...prev, board: [...prev.board, { id: uuidv4(), tiles: candidateSet, orientation: pid, createdBy: pid, rotation: getRandomRotation(), x: pos.x, y: pos.y }],
+                    selectedTileIds: [], playerTopHand: pid === 'TOP' ? newHand : prev.playerTopHand, playerBottomHand: pid === 'BOTTOM' ? newHand : prev.playerBottomHand,
+                    activePlayer: pid, lastDrawnTileId: { ...prev.lastDrawnTileId, [pid]: null }
                 }));
             }
           };
 
-          const initAddToSet = (pid) => {
-              if (gameState.selectedTileIds.length === 0) return;
-              if (gameState.interactionMode === 'REORDER_BOARD') {
-                  setGameState(prev => ({ ...prev, activePlayer: pid }));
-                  return;
-              }
-              setGameState(prev => ({ ...prev, activePlayer: pid, interactionMode: 'SELECTING_TARGET_SET' }));
-          };
-
           const handleSetClick = (setId) => {
-              const canClick = gameState.interactionMode === 'SELECTING_TARGET_SET' || 
-                               gameState.interactionMode === 'REORDER_BOARD';
-              if (!canClick || !gameState.activePlayer) return;
-
+              if (gameState.selectedTileIds.length === 0 || !gameState.activePlayer) return;
               const targetSetIndex = gameState.board.findIndex(b => b.id === setId);
               if (targetSetIndex === -1) return;
-
               const targetSet = gameState.board[targetSetIndex];
               const hand = getActiveHand(gameState.activePlayer);
               const selectedTiles = hand.filter(t => gameState.selectedTileIds.includes(t.id));
               if (selectedTiles.length === 0) return;
-
               const isReordering = gameState.interactionMode === 'REORDER_BOARD';
-              let newTiles = null;
-
-              if (isReordering) {
-                  const combined = [...targetSet.tiles, ...selectedTiles];
-                  newTiles = autoSortSet(combined, false); 
-              } else {
-                  newTiles = validateMove(targetSet.tiles, selectedTiles);
-              }
-
+              let newTiles = isReordering ? autoSortSet([...targetSet.tiles, ...selectedTiles], false) : validateMove(targetSet.tiles, selectedTiles);
               if (newTiles) {
                   const newHand = hand.filter(t => !gameState.selectedTileIds.includes(t.id));
                   const newBoard = [...gameState.board];
                   newBoard[targetSetIndex] = { ...targetSet, tiles: newTiles };
-                  setGameState(prev => ({
-                      ...prev,
-                      board: newBoard,
-                      playerTopHand: gameState.activePlayer === 'TOP' ? newHand : prev.playerTopHand,
-                      playerBottomHand: gameState.activePlayer === 'BOTTOM' ? newHand : prev.playerBottomHand,
-                      selectedTileIds: [],
-                      interactionMode: prev.interactionMode === 'SELECTING_TARGET_SET' ? 'IDLE' : 'REORDER_BOARD',
-                      lastDrawnTileId: { ...prev.lastDrawnTileId, [gameState.activePlayer]: null }
-                  }));
-              } else {
-                  if (!isReordering) {
-                    setGameState(prev => ({ ...prev, interactionMode: 'IDLE' }));
-                  }
+                  setGameState(prev => ({ ...prev, board: newBoard, playerTopHand: gameState.activePlayer === 'TOP' ? newHand : prev.playerTopHand, playerBottomHand: gameState.activePlayer === 'BOTTOM' ? newHand : prev.playerBottomHand, selectedTileIds: [], lastDrawnTileId: { ...prev.lastDrawnTileId, [gameState.activePlayer]: null } }));
               }
           };
 
           const toggleReorder = () => {
               setGameState(prev => {
                   if (prev.interactionMode === 'REORDER_BOARD') {
-                      if (!validateBoard(prev.board)) {
-                          return prev; 
-                      }
-                      return { 
-                          ...prev, 
-                          interactionMode: 'IDLE', 
-                          boardSnapshot: null, 
-                          rackSnapshots: null,
-                          activePlayer: null 
-                      };
+                      if (!validateBoard(prev.board)) return prev; 
+                      return { ...prev, interactionMode: 'IDLE', boardSnapshot: null, rackSnapshots: null, activePlayer: null };
                   } else {
-                      return {
-                        ...prev,
-                        interactionMode: 'REORDER_BOARD',
-                        boardSnapshot: JSON.parse(JSON.stringify(prev.board)),
-                        rackSnapshots: {
-                            TOP: JSON.parse(JSON.stringify(prev.playerTopHand)),
-                            BOTTOM: JSON.parse(JSON.stringify(prev.playerBottomHand))
-                        },
-                        activePlayer: null 
-                      };
+                      return { ...prev, interactionMode: 'REORDER_BOARD', boardSnapshot: JSON.parse(JSON.stringify(prev.board)), rackSnapshots: { TOP: JSON.parse(JSON.stringify(prev.playerTopHand)), BOTTOM: JSON.parse(JSON.stringify(prev.playerBottomHand)) }, activePlayer: null };
                   }
               });
           };
 
           const handleResetBoard = () => {
               setGameState(prev => ({
-                  ...prev,
-                  board: prev.boardSnapshot ? JSON.parse(JSON.stringify(prev.boardSnapshot)) : prev.board,
+                  ...prev, board: prev.boardSnapshot ? JSON.parse(JSON.stringify(prev.boardSnapshot)) : prev.board,
                   playerTopHand: prev.rackSnapshots ? JSON.parse(JSON.stringify(prev.rackSnapshots.TOP)) : prev.playerTopHand,
                   playerBottomHand: prev.rackSnapshots ? JSON.parse(JSON.stringify(prev.rackSnapshots.BOTTOM)) : prev.playerBottomHand,
               }));
           };
 
           return (
-            <div 
-                className="flex flex-col h-screen w-screen overflow-hidden bg-gray-900 font-sans touch-none"
-                onPointerMove={handlePointerMove}
-                onPointerUp={handlePointerUp}
-                onPointerCancel={handlePointerUp}
-                onContextMenu={(e) => e.preventDefault()}
-            >
+            <div className="flex flex-col h-screen w-screen overflow-hidden bg-gray-900 font-sans touch-none" onPointerMove={handlePointerMove} onPointerUp={handlePointerUp} onPointerCancel={handlePointerUp} onContextMenu={(e) => e.preventDefault()}>
               {gameState.gamePhase === 'PLAYING' && (
-                <PlayerRack 
-                    playerId="TOP"
-                    tiles={gameState.playerTopHand}
-                    selectedTileIds={gameState.selectedTileIds}
-                    draggedTileId={gameState.dragState.tileId}
-                    isMyTurn={gameState.activePlayer === 'TOP'}
-                    onSort={(method) => handleSort('TOP', method)}
-                    onDraw={() => handleDraw('TOP')}
-                    onPlayNewSet={() => handlePlayNewSet('TOP')}
-                    onAddToSet={() => initAddToSet('TOP')}
-                    onDragStart={handleDragStart}
-                    interactionMode={gameState.interactionMode}
-                    disabled={false}
-                    newTileId={gameState.lastDrawnTileId.TOP}
-                />
+                <PlayerRack playerId="TOP" tiles={gameState.playerTopHand} selectedTileIds={gameState.selectedTileIds} draggedTileId={gameState.dragState.tileId} isMyTurn={gameState.activePlayer === 'TOP'} onSort={(m) => handleSort('TOP', m)} onDraw={() => handleDraw('TOP')} onPlayNewSet={() => handlePlayNewSet('TOP')} onDragStart={handleDragStart} interactionMode={gameState.interactionMode} disabled={false} newTileId={gameState.lastDrawnTileId.TOP} />
               )}
-
-              <GameBoard 
-                sets={gameState.board}
-                interactionMode={gameState.interactionMode}
-                gamePhase={gameState.gamePhase}
-                setupState={gameState.setupState}
-                draggedTileId={gameState.dragState.tileId}
-                onSetClick={handleSetClick}
-                onToggleReorder={toggleReorder}
-                onResetBoard={handleResetBoard}
-                onResetGame={handleResetGame}
-                onDragStart={handleDragStart}
-                onSetupDraw={handleSetupDraw}
-                onStartGame={handleStartGame}
-                onSetDragStart={handleSetDragStart}
-                onSetRotate={handleSetRotate}
-                onCycleRotate={handleCycleRotate}
-                onResetRotate={handleResetRotate}
-              />
-
+              <GameBoard sets={gameState.board} interactionMode={gameState.interactionMode} gamePhase={gameState.gamePhase} setupState={gameState.setupState} draggedTileId={gameState.dragState.tileId} hasSelectedTiles={gameState.selectedTileIds.length > 0} onSetClick={handleSetClick} onToggleReorder={toggleReorder} onResetBoard={handleResetBoard} onResetGame={handleResetGame} onDragStart={handleDragStart} onSetupDraw={handleSetupDraw} onStartGame={handleStartGame} onSetDragStart={handleSetDragStart} onSetRotate={handleSetRotate} onCycleRotate={handleCycleRotate} onResetRotate={handleResetRotate} onCompactBoard={handleCompactBoard} />
               {gameState.gamePhase === 'PLAYING' && (
-                <PlayerRack 
-                    playerId="BOTTOM"
-                    tiles={gameState.playerBottomHand}
-                    selectedTileIds={gameState.selectedTileIds}
-                    draggedTileId={gameState.dragState.tileId}
-                    isMyTurn={gameState.activePlayer === 'BOTTOM'}
-                    onSort={(method) => handleSort('BOTTOM', method)}
-                    onDraw={() => handleDraw('BOTTOM')}
-                    onPlayNewSet={() => handlePlayNewSet('BOTTOM')}
-                    onAddToSet={() => initAddToSet('BOTTOM')}
-                    onDragStart={handleDragStart}
-                    interactionMode={gameState.interactionMode}
-                    disabled={false}
-                    newTileId={gameState.lastDrawnTileId.BOTTOM}
-                />
+                <PlayerRack playerId="BOTTOM" tiles={gameState.playerBottomHand} selectedTileIds={gameState.selectedTileIds} draggedTileId={gameState.dragState.tileId} isMyTurn={gameState.activePlayer === 'BOTTOM'} onSort={(m) => handleSort('BOTTOM', m)} onDraw={() => handleDraw('BOTTOM')} onPlayNewSet={() => handlePlayNewSet('BOTTOM')} onDragStart={handleDragStart} interactionMode={gameState.interactionMode} disabled={false} newTileId={gameState.lastDrawnTileId.BOTTOM} />
               )}
-
               {gameState.dragState.isDragging && gameState.dragState.tileData && (
-                  <div 
-                    className="fixed pointer-events-none z-50 shadow-2xl opacity-90 scale-110"
-                    style={{ 
-                        left: gameState.dragState.x - dragOffsetRef.current.x, 
-                        top: gameState.dragState.y - dragOffsetRef.current.y
-                    }}
-                  >
+                  <div className="fixed pointer-events-none z-50 shadow-2xl opacity-90 scale-110" style={{ left: gameState.dragState.x - dragOffsetRef.current.x, top: gameState.dragState.y - dragOffsetRef.current.y }}>
                       <Tile tile={gameState.dragState.tileData} size="md" />
                   </div>
               )}
-
               {showNewGameModal && (
                   <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
                       <div className="bg-gray-800 border border-gray-600 p-8 rounded-2xl shadow-2xl max-w-sm w-full flex flex-col gap-6 animate-in fade-in zoom-in duration-200">
                           <div className="flex flex-col items-center gap-2">
-                              <AlertTriangle size={48} className="text-yellow-500 mb-2" />
+                              <Icons.AlertTriangle size={48} className="text-yellow-500 mb-2" />
                               <h2 className="text-2xl font-bold text-white text-center">Start New Game?</h2>
-                              <p className="text-gray-300 text-center text-lg leading-relaxed">
-                                  Are you sure? This will erase the current game and return to the setup phase.
-                              </p>
+                              <p className="text-gray-300 text-center text-lg leading-relaxed">Are you sure? This will erase the current game.</p>
                           </div>
                           <div className="flex gap-4">
-                              <button 
-                                  onClick={() => setShowNewGameModal(false)}
-                                  className="flex-1 py-4 rounded-xl bg-gray-700 text-white font-bold text-lg active:scale-95 transition-transform hover:bg-gray-600"
-                              >
-                                  Cancel
-                              </button>
-                              <button 
-                                  onClick={confirmNewGameReset}
-                                  className="flex-1 py-4 rounded-xl bg-red-600 text-white font-bold text-lg shadow-lg active:scale-95 transition-transform hover:bg-red-500"
-                              >
-                                  New Game
-                              </button>
+                              <button onClick={() => setShowNewGameModal(false)} className="flex-1 py-4 rounded-xl bg-gray-700 text-white font-bold text-lg active:scale-95 transition-transform hover:bg-gray-600">Cancel</button>
+                              <button onClick={confirmNewGameReset} className="flex-1 py-4 rounded-xl bg-red-600 text-white font-bold text-lg shadow-lg active:scale-95 transition-transform hover:bg-red-500">New Game</button>
                           </div>
                       </div>
                   </div>
@@ -1632,13 +1255,8 @@
           );
         };
 
-        const rootElement = document.getElementById('root');
-        const root = ReactDOM.createRoot(rootElement);
-        root.render(
-            <React.StrictMode>
-                <App />
-            </React.StrictMode>
-        );
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
     </script>
 </body>
 </html>
