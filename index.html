@@ -40,14 +40,13 @@
       })();
     </script>
 
-    <!-- External Libraries -->
+    <!-- External Libraries (Globals) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/uuid/8.3.2/uuid.min.js"></script>
     <script src="https://unpkg.com/clsx@1.2.1/dist/clsx.min.js"></script>
-    <script src="https://unpkg.com/lucide-react@0.263.1/dist/umd/lucide-react.min.js"></script>
 
     <script>
       tailwind.config = {
@@ -80,17 +79,18 @@
         overscroll-behavior-y: none;
         -webkit-user-select: none;
         user-select: none;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       }
     </style>
-  <script type="importmap">
+<script type="importmap">
 {
   "imports": {
     "react": "https://aistudiocdn.com/react@^19.2.0",
     "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
     "react/": "https://aistudiocdn.com/react@^19.2.0/",
     "uuid": "https://aistudiocdn.com/uuid@^13.0.0",
-    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.555.0",
-    "clsx": "https://aistudiocdn.com/clsx@^2.1.1"
+    "clsx": "https://aistudiocdn.com/clsx@^2.1.1",
+    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.555.0"
   }
 }
 </script>
@@ -102,11 +102,38 @@
       // --- GLOBALS SETUP ---
       const { useState, useEffect, useCallback, useRef } = React;
       const { v4: uuidv4 } = window.uuid;
-      const { 
-        Ghost, Palette, Layers, PlusSquare, Download, ChevronUp, ChevronDown, 
-        Move, RotateCcw, Play, AlertTriangle 
-      } = window.lucideReact;
       const clsx = window.clsx;
+
+      // --- ICONS (Inline SVG to avoid external UMD issues) ---
+      const Icon = ({ size = 24, className, children, ...props }) => (
+        <svg 
+          xmlns="http://www.w3.org/2000/svg" 
+          width={size} 
+          height={size} 
+          viewBox="0 0 24 24" 
+          fill="none" 
+          stroke="currentColor" 
+          strokeWidth="2" 
+          strokeLinecap="round" 
+          strokeLinejoin="round" 
+          className={className} 
+          {...props}
+        >
+          {children}
+        </svg>
+      );
+
+      const Ghost = (props) => <Icon {...props}><path d="M9 10h.01" /><path d="M15 10h.01" /><path d="M12 2a8 8 0 0 0-8 8v12l3-3 2.5 2.5L12 19l2.5 2.5L17 19l3 3V10a8 8 0 0 0-8-8z" /></Icon>;
+      const Palette = (props) => <Icon {...props}><circle cx="13.5" cy="6.5" r=".5" /><circle cx="17.5" cy="10.5" r=".5" /><circle cx="8.5" cy="7.5" r=".5" /><circle cx="6.5" cy="12.5" r=".5" /><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z" /></Icon>;
+      const Layers = (props) => <Icon {...props}><polygon points="12 2 2 7 12 12 22 7 12 2" /><polyline points="2 17 12 22 22 17" /><polyline points="2 12 12 17 22 12" /></Icon>;
+      const PlusSquare = (props) => <Icon {...props}><rect width="18" height="18" x="3" y="3" rx="2" /><path d="M8 12h8" /><path d="M12 8v8" /></Icon>;
+      const Download = (props) => <Icon {...props}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" x2="12" y1="15" y2="3" /></Icon>;
+      const ChevronUp = (props) => <Icon {...props}><path d="m18 15-6-6-6 6" /></Icon>;
+      const ChevronDown = (props) => <Icon {...props}><path d="m6 9 6 6 6-6" /></Icon>;
+      const Move = (props) => <Icon {...props}><polyline points="5 9 2 12 5 15" /><polyline points="9 5 12 2 15 5" /><polyline points="15 19 12 22 9 19" /><polyline points="19 9 22 12 19 15" /><line x1="2" x2="22" y1="12" y2="12" /><line x1="12" x2="12" y1="2" y2="22" /></Icon>;
+      const RotateCcw = (props) => <Icon {...props}><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><path d="M3 3v5h5" /></Icon>;
+      const Play = (props) => <Icon {...props}><polygon points="5 3 19 12 5 21 5 3" /></Icon>;
+      const AlertTriangle = (props) => <Icon {...props}><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" /><path d="M12 9v4" /><path d="M12 17h.01" /></Icon>;
 
       // --- CONSTANTS ---
       const COLORS = ['BLACK', 'BLUE', 'RED', 'ORANGE'];
@@ -124,7 +151,6 @@
         ORANGE: 'text-rummy-orange',
       };
 
-      // Hex codes for canvas/explicit usage
       const HEX_MAP = {
           BLACK: '#1a1a1a',
           BLUE: '#0066cc',
@@ -132,29 +158,7 @@
           ORANGE: '#e69500',
       };
 
-      // --- TYPES (Interfaces are stripped by Babel TS preset but kept for code structure) ---
-      
-      /*
-      type TileColor = 'BLACK' | 'BLUE' | 'RED' | 'ORANGE';
-      interface TileData {
-        id: string;
-        value: number; 
-        color: TileColor | null;
-        isJoker: boolean;
-        rackX?: number; 
-        rackY?: number; 
-        isDuplicate?: boolean;
-      }
-      interface BoardSet {
-        id: string;
-        tiles: TileData[];
-        orientation: 'TOP' | 'BOTTOM'; 
-        createdBy: 'TOP' | 'BOTTOM';
-        rotation: number;
-        x: number;
-        y: number;
-      }
-      */
+      // --- TYPES (Keeping structure implicitly) ---
 
       // --- UTILS: GAME LOGIC ---
 
@@ -181,7 +185,6 @@
           deck.push({
             id: uuidv4(),
             value: 0,
-            // Cycle through Black/Red based on index
             color: jokerColors[i % jokerColors.length], 
             isJoker: true,
           });
@@ -203,7 +206,7 @@
         const sorted = [...tiles];
 
         switch (method) {
-          case 'RUN': // Sort by Color, then Value (creates runs of colors)
+          case 'RUN': // Sort by Color, then Value
             return sorted.sort((a, b) => {
                if (a.isJoker) return 1;
                if (b.isJoker) return -1;
@@ -211,7 +214,7 @@
                return a.value - b.value;
             });
 
-          case 'GROUP': // Sort by Value, then Color (creates groups of numbers)
+          case 'GROUP': // Sort by Value, then Color
             return sorted.sort((a, b) => {
               if (a.isJoker) return 1;
               if (b.isJoker) return -1;
@@ -222,26 +225,6 @@
           default:
             return sorted;
         }
-      };
-
-      const separateHand = (tiles) => {
-          const unique = [];
-          const duplicates = [];
-          const seen = new Set();
-
-          tiles.forEach(tile => {
-              // Treat all jokers as identical for duplication purposes
-              const key = tile.isJoker ? 'JOKER' : `${tile.color}-${tile.value}`;
-              
-              if (seen.has(key)) {
-                  duplicates.push(tile);
-              } else {
-                  seen.add(key);
-                  unique.push(tile);
-              }
-          });
-
-          return [...unique, ...duplicates];
       };
 
       const sortHand = (tiles, method) => {
@@ -267,10 +250,7 @@
 
           // 3. Assign Grid Positions
           const totalTiles = tiles.length;
-          // Determine rows needed. If > 20 tiles, we need 3 rows. Else 2 rows (default).
           const dynamicRows = totalTiles > (RACK_ROWS * RACK_COLS) ? 3 : RACK_ROWS;
-          
-          // Determine columns needed. If > 30 (which is 3x10), we expand columns.
           const dynamicCols = Math.max(RACK_COLS, Math.ceil(totalTiles / dynamicRows));
 
           const positionedTiles = [];
@@ -303,14 +283,12 @@
       };
 
       const findFreeRackSlot = (tiles) => {
-          // Determine dynamic dimensions of current hand
           const totalTiles = tiles.length;
           const maxValX = tiles.reduce((max, t) => Math.max(max, t.rackX || 0), 0);
           
           const dynamicRows = totalTiles > (RACK_ROWS * RACK_COLS) ? 3 : RACK_ROWS;
           const dynamicCols = Math.max(RACK_COLS, Math.ceil(totalTiles / dynamicRows), maxValX + 1);
 
-          // Scan slots from (0,0) across then down
           const occupied = new Set();
           tiles.forEach(t => {
               if (t.rackX !== undefined && t.rackY !== undefined) {
@@ -326,32 +304,15 @@
               }
           }
           
-          // If fully full, add to next available column in row 0
           return { x: dynamicCols, y: 0 };
       };
 
-      const findDuplicateSplitIndex = (tiles) => {
-          const seen = new Set();
-          let uniqueCount = 0;
-          for (const tile of tiles) {
-              const key = tile.isJoker ? 'JOKER' : `${tile.color}-${tile.value}`;
-              if (!seen.has(key)) {
-                  seen.add(key);
-                  uniqueCount++;
-              }
-          }
-          return uniqueCount;
-      };
-
-      // Places Jokers into the gaps of a run
       const organizeRun = (tiles) => {
           const jokers = tiles.filter(t => t.isJoker);
           const nonJokers = tiles.filter(t => !t.isJoker).sort((a, b) => a.value - b.value);
 
-          // If only jokers, return as is
           if (nonJokers.length === 0) return tiles;
 
-          // Remove duplicates strictly for the purpose of structure calculation
           const uniqueNonJokers = [];
           if (nonJokers.length > 0) {
               uniqueNonJokers.push(nonJokers[0]);
@@ -368,7 +329,6 @@
           let currentVal = uniqueNonJokers[0].value;
           result.push(uniqueNonJokers[0]);
 
-          // Fill internal gaps
           for (let i = 1; i < uniqueNonJokers.length; i++) {
               const nextTile = uniqueNonJokers[i];
               const gap = nextTile.value - currentVal - 1;
@@ -384,19 +344,15 @@
               currentVal = nextTile.value;
           }
 
-          // Distribute remaining jokers (Start or End)
           while (jokers.length > 0) {
               if (currentVal < MAX_VALUE) {
-                  // Append to end if not exceeding 13
                   result.push(jokers.pop());
                   currentVal++;
               } else {
-                  // Prepend to start
                   result.unshift(jokers.pop());
               }
           }
           
-          // Append skipped duplicates (should not exist if autoSortSet works correctly)
           const skipped = nonJokers.filter(t => !uniqueNonJokers.includes(t));
           result.push(...skipped);
 
@@ -409,42 +365,39 @@
         const jokers = tiles.filter(t => t.isJoker);
         const nonJokers = tiles.filter(t => !t.isJoker);
 
-        // 1. Check Group (Same Value, Different Colors)
+        // 1. Check Group
         const isGroup = () => {
-          if (tiles.length > 4) return false; // Max 4 colors
-          if (nonJokers.length === 0) return true; // All jokers is valid
+          if (tiles.length > 4) return false;
+          if (nonJokers.length === 0) return true;
 
           const targetValue = nonJokers[0].value;
           const seenColors = new Set();
           
           for (const tile of nonJokers) {
             if (tile.value !== targetValue) return false;
-            if (tile.color && seenColors.has(tile.color)) return false; // Duplicate color in group
+            if (tile.color && seenColors.has(tile.color)) return false;
             if (tile.color) seenColors.add(tile.color);
           }
           return true;
         };
 
-        // 2. Check Run (Same Color, Consecutive Values)
+        // 2. Check Run
         const isRun = () => {
            if (tiles.length > 13) return false;
            if (nonJokers.length === 0) return true;
 
-           // Ensure all non-jokers are same color
            const targetColor = nonJokers[0].color;
            if (!nonJokers.every(t => t.color === targetColor)) return false;
 
-           // Sort non-jokers to check gaps
            const sortedNonJokers = [...nonJokers].sort((a, b) => a.value - b.value);
 
            let jokersAvailable = jokers.length;
            
-           // Check gaps
            for (let i = 0; i < sortedNonJokers.length - 1; i++) {
               const current = sortedNonJokers[i].value;
               const next = sortedNonJokers[i+1].value;
               
-              if (current === next) return false; // Duplicate found in run
+              if (current === next) return false;
               
               const gap = next - current - 1; 
               
@@ -452,11 +405,10 @@
                   if (jokersAvailable >= gap) {
                       jokersAvailable -= gap;
                   } else {
-                      return false; // Not enough jokers to fill gap
+                      return false;
                   }
               }
            }
-           
            return true;
         };
 
@@ -464,10 +416,8 @@
       };
 
       const autoSortSet = (tiles, requireValid = true) => {
-          // CRITICAL: Deduplicate by ID to prevent ghost tiles/jokers
           const seen = new Set();
           const uniqueTiles = [];
-          
           for (const t of tiles) {
               if (!seen.has(t.id)) {
                   seen.add(t.id);
@@ -475,20 +425,16 @@
               }
           }
 
-          // Try Run Sort (Strict)
           const runSorted = sortTiles(uniqueTiles, 'RUN');
           if (isValidSet(runSorted)) {
-              // If it is a valid run, use intelligent organizer to place Jokers in gaps
               return organizeRun(uniqueTiles);
           }
 
-          // Try Group Sort
           const groupSorted = sortTiles(uniqueTiles, 'GROUP');
           if (isValidSet(groupSorted)) return groupSorted;
 
           if (requireValid) return null;
           
-          // If we don't require validity (e.g. during reorder drag), return a sensible default
           const colors = uniqueTiles.map(t => t.color).filter(c => c !== null);
           const mostCommonColor = colors.sort((a,b) => colors.filter(v => v===a).length - colors.filter(v => v===b).length).pop();
           const sameColorCount = uniqueTiles.filter(t => t.color === mostCommonColor).length;
@@ -510,16 +456,15 @@
 
       const getSetDimensions = (tileCount) => {
           const tileWidth = 48;
-          const gap = 1; // Tight gap
-          const padding = 2; // Minimal padding
+          const gap = 1;
+          const padding = 2;
           
           const width = (tileCount * tileWidth) + ((tileCount - 1) * gap) + padding;
-          const height = 80; // Tighter height
+          const height = 80;
           return { width, height };
       };
 
       const doRectsIntersect = (r1, r2) => {
-          // x, y are centers
           return !(r2.x - r2.w/2 > r1.x + r1.w/2 || 
                    r2.x + r2.w/2 < r1.x - r1.w/2 || 
                    r2.y - r2.h/2 > r1.y + r1.h/2 || 
@@ -528,24 +473,19 @@
 
       const findFreePosition = (existingSets, tileCount) => {
           const { width, height } = getSetDimensions(tileCount);
-          const buffer = 2; // Very tight buffer between sets
+          const buffer = 2;
           const newRect = { x: 0, y: 0, w: width + buffer, h: height + buffer };
           
-          // Spiral Search
-          const a = 5; // Tight spiral gap
+          const a = 5;
           let angle = 0;
-          const step = 0.1; // Fine grained step
+          const step = 0.1;
           let i = 0;
 
-          // Safety break
           while (i < 5000) {
-              // Calculate position
               const radius = a * angle;
-              // Start from center
               newRect.x = i === 0 ? 0 : radius * Math.cos(angle);
               newRect.y = i === 0 ? 0 : radius * Math.sin(angle);
 
-              // Check collision against all existing sets
               const hasCollision = existingSets.some(set => {
                   const dim = getSetDimensions(set.tiles.length);
                   return doRectsIntersect(newRect, { 
@@ -559,7 +499,6 @@
               if (!hasCollision) {
                   return { x: newRect.x, y: newRect.y };
               }
-
               angle += step;
               i++;
           }
@@ -567,9 +506,7 @@
           return { x: 0, y: 0 };
       };
 
-      // Gravity Compaction: Pulls sets towards center along their current angle
       const compactBoardLogic = (sets) => {
-          // 1. Sort sets by distance from center so inner ones settle first
           const sortedSets = [...sets].sort((a, b) => {
               const distA = Math.hypot(a.x, a.y);
               const distB = Math.hypot(b.x, b.y);
@@ -583,24 +520,16 @@
               const buffer = 2;
               const setRect = { x: 0, y: 0, w: width + buffer, h: height + buffer };
               
-              // Target ray angle
               const angle = Math.atan2(set.y, set.x);
-              
-              // Max distance we need to check is current distance
               const maxDist = Math.hypot(set.x, set.y);
-              
-              // Ray cast from center (r=0) outwards
               let validX = set.x;
               let validY = set.y;
-              
-              // Step size for ray march
               const rayStep = 5;
               
               for (let r = 0; r <= maxDist; r += rayStep) {
                    setRect.x = r * Math.cos(angle);
                    setRect.y = r * Math.sin(angle);
                    
-                   // Check if this position overlaps with ALREADY COMPACTED sets
                    const collision = compactedSets.some(placedSet => {
                        const dim = getSetDimensions(placedSet.tiles.length);
                        return doRectsIntersect(setRect, {
@@ -614,14 +543,11 @@
                    if (!collision) {
                        validX = setRect.x;
                        validY = setRect.y;
-                       // We found the closest valid spot on the ray!
                        break;
                    }
               }
-              
               compactedSets.push({ ...set, x: validX, y: validY });
           }
-          
           return compactedSets;
       };
 
@@ -629,17 +555,13 @@
 
       const getJokerIdentity = (set, jokerId) => {
           const nonJokers = set.filter(t => !t.isJoker);
-          if (nonJokers.length === 0) return null; // Ambiguous
+          if (nonJokers.length === 0) return null;
 
-          // Check Run
           const sorted = sortTiles(nonJokers, 'RUN');
           const isSameColor = sorted.every(t => t.color === sorted[0].color);
           
           if (isSameColor) {
-              // Assume Run. Find where the joker fits.
               const jokerIndex = set.findIndex(t => t.id === jokerId);
-              
-              // Find neighbors
               const prev = set[jokerIndex - 1];
               const next = set[jokerIndex + 1];
               
@@ -647,7 +569,6 @@
               if (next && !next.isJoker) return { value: next.value - 1, color: next.color };
           }
 
-          // Check Group
           const firstVal = nonJokers[0].value;
           if (nonJokers.every(t => t.value === firstVal)) {
               return { value: firstVal, color: null };
@@ -660,69 +581,51 @@
           const jokersInHand = hand.filter(t => t.isJoker);
           const nonJokersInHand = hand.filter(t => !t.isJoker);
 
-          // --- STRATEGY 0: SWAP JOKER FROM BOARD ---
-          // If we have the natural tile for a joker on board, take it!
+          // 0. SWAP JOKER
           for (const set of board) {
               const joker = set.tiles.find(t => t.isJoker);
               if (joker) {
                   const identity = getJokerIdentity(set.tiles, joker.id);
                   if (identity) {
-                      // Find matching tile in hand
                       const match = hand.find(t => 
                           !t.isJoker && 
                           t.value === identity.value && 
                           (identity.color === null ? 
-                              // For group: color must not exist in set's non-jokers
                               !set.tiles.some(st => !st.isJoker && st.color === t.color) 
                               : t.color === identity.color)
                       );
-
                       if (match) {
-                          return {
-                              type: 'SWAP_JOKER',
-                              tiles: [match],
-                              targetSetId: set.id,
-                              jokerId: joker.id
-                          };
+                          return { type: 'SWAP_JOKER', tiles: [match], targetSetId: set.id, jokerId: joker.id };
                       }
                   }
               }
           }
 
-          // --- STRATEGY 1: ADD TO EXISTING SET ---
+          // 1. ADD TO SET
           for (const tile of hand) {
               for (const set of board) {
                   if (validateMove(set.tiles, [tile])) {
-                      return {
-                          type: 'ADD_TO_SET',
-                          tiles: [tile],
-                          targetSetId: set.id
-                      };
+                      return { type: 'ADD_TO_SET', tiles: [tile], targetSetId: set.id };
                   }
               }
           }
 
-          // --- STRATEGY 2: PLAY NEW SET (HAND ONLY) ---
-          
-          // Group by Value
+          // 2. PLAY NEW SET
           const byValue = {};
           nonJokersInHand.forEach(t => {
               if (!byValue[t.value]) byValue[t.value] = [];
               byValue[t.value].push(t);
           });
 
-          // Try Groups with Jokers
           for (const valStr in byValue) {
               const group = byValue[valStr];
               const needed = 3 - group.length;
               if (needed <= jokersInHand.length) {
                   const candidate = [...group, ...jokersInHand.slice(0, Math.max(0, needed))];
-                  
                   if (candidate.length < 3) {
                        const moreJokers = jokersInHand.slice(Math.max(0, needed), 4 - group.length);
                        candidate.push(...moreJokers);
                   }
-                  
                   if (candidate.length >= 3) {
                        const sortedCandidate = autoSortSet(candidate);
                        if (sortedCandidate) {
@@ -733,7 +636,6 @@
               }
           }
 
-          // Try Runs with Jokers
           const byColor = {};
           nonJokersInHand.forEach(t => {
               if (t.color) {
@@ -744,7 +646,6 @@
 
           for (const color in byColor) {
               const tiles = byColor[color].sort((a,b) => a.value - b.value);
-              // Simple scan for consecutive sequences with gaps filled by jokers
               for (let i = 0; i < tiles.length; i++) {
                   let currentRun = [tiles[i]];
                   let jokersUsed = 0;
@@ -753,16 +654,12 @@
                   for (let j = i + 1; j < tiles.length; j++) {
                       const diff = tiles[j].value - lastVal;
                       const needed = diff - 1;
-                      
-                      if (diff === 0) continue; // Duplicate
-                      
+                      if (diff === 0) continue; 
                       if (jokersInHand.length - jokersUsed >= needed) {
-                          // Fill gaps
                           for(let k=0; k<needed; k++) currentRun.push(jokersInHand[jokersUsed + k]);
                           jokersUsed += needed;
                           currentRun.push(tiles[j]);
                           lastVal = tiles[j].value;
-                          
                           if (currentRun.length >= 3) {
                               const sortedRun = autoSortSet(currentRun);
                               if (sortedRun) {
@@ -770,9 +667,7 @@
                                    return { type: 'PLAY_NEW_SET', tiles: sortedRun, targetPos: pos };
                               }
                           }
-                      } else {
-                          break; 
-                      }
+                      } else { break; }
                   }
                   
                   if (currentRun.length === 2 && jokersInHand.length - jokersUsed >= 1) {
@@ -786,37 +681,26 @@
               }
           }
 
-          // --- STRATEGY 3: SPLIT RUN TO INSERT ---
+          // 3. SPLIT RUN
           for (const set of board) {
               if (set.tiles.length >= 5) {
                    const nonJokers = set.tiles.filter(t => !t.isJoker);
                    if (nonJokers.length >= 2 && nonJokers[0].color === nonJokers[1].color) {
                        const runColor = nonJokers[0].color;
-                       
                        for (const tile of hand) {
                            if (tile.isJoker) continue;
                            if (tile.color !== runColor) continue;
-                           
                            if (set.tiles.some(t => !t.isJoker && t.value === tile.value)) {
                                const combined = [...set.tiles, tile];
                                const sorted = sortTiles(combined, 'RUN');
-                               
                                for (let i = 0; i < sorted.length - 1; i++) {
                                    const t1 = sorted[i];
                                    const t2 = sorted[i+1];
-                                   
                                    if (!t1.isJoker && !t2.isJoker && t1.value === t2.value) {
                                        const left = sorted.slice(0, i+1);
                                        const right = sorted.slice(i+1);
-                                       
                                        if (isValidSet(left) && isValidSet(right)) {
-                                           return {
-                                               type: 'SPLIT_SET',
-                                               tiles: [tile],
-                                               splitSetId: set.id,
-                                               newSet1: left,
-                                               newSet2: right
-                                           };
+                                           return { type: 'SPLIT_SET', tiles: [tile], splitSetId: set.id, newSet1: left, newSet2: right };
                                        }
                                    }
                                }
@@ -826,16 +710,12 @@
               }
           }
           
-          // --- STRATEGY 4: HARVEST / STEAL FROM BOARD ---
+          // 4. STEAL TILE
           const partialSets = [];
-          
           for (const valStr in byValue) {
               const group = byValue[valStr];
-              if (group.length === 2) {
-                   partialSets.push({ tiles: group, neededVal: parseInt(valStr), type: 'GROUP' });
-              }
+              if (group.length === 2) partialSets.push({ tiles: group, neededVal: parseInt(valStr), type: 'GROUP' });
           }
-          
           for (const color in byColor) {
               const tiles = byColor[color].sort((a,b) => a.value - b.value);
               for(let i=0; i<tiles.length-1; i++) {
@@ -860,41 +740,23 @@
 
                   if (targetTileIndex !== -1) {
                       const tileToSteal = set.tiles[targetTileIndex];
-                      
                       const remainder = [...set.tiles];
                       remainder.splice(targetTileIndex, 1);
-                      
                       const left = remainder.slice(0, targetTileIndex);
                       const right = remainder.slice(targetTileIndex); 
                       
                       let validSteal = false;
                       let splits = false;
-                      
-                      if (remainder.length >= 3 && isValidSet(remainder)) {
-                          validSteal = true;
-                      } else if (left.length >= 3 && isValidSet(left) && right.length >= 3 && isValidSet(right)) {
-                          validSteal = true;
-                          splits = true;
-                      } else if (left.length >= 3 && isValidSet(left) && right.length === 0) {
-                           validSteal = true;
-                      } else if (right.length >= 3 && isValidSet(right) && left.length === 0) {
-                           validSteal = true;
-                      }
+                      if (remainder.length >= 3 && isValidSet(remainder)) validSteal = true;
+                      else if (left.length >= 3 && isValidSet(left) && right.length >= 3 && isValidSet(right)) { validSteal = true; splits = true; }
+                      else if ((left.length >= 3 && isValidSet(left)) || (right.length >= 3 && isValidSet(right))) validSteal = true;
 
                       if (validSteal) {
                           const newSet = [...partial.tiles, tileToSteal];
                           const sortedNewSet = autoSortSet(newSet);
-                          
                           if (sortedNewSet) {
                               const pos = findFreePosition(board, sortedNewSet.length);
-                              return {
-                                  type: 'STEAL_TILE',
-                                  tiles: sortedNewSet,
-                                  sourceSetId: set.id,
-                                  stolenTileId: tileToSteal.id,
-                                  targetPos: pos,
-                                  remainderSplit: splits
-                              };
+                              return { type: 'STEAL_TILE', tiles: sortedNewSet, sourceSetId: set.id, stolenTileId: tileToSteal.id, targetPos: pos, remainderSplit: splits };
                           }
                       }
                   }
