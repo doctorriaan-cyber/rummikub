@@ -64,12 +64,20 @@
     </script>
     
     <!-- External Libraries -->
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://unpkg.com/lucide-react@0.263.1/dist/umd/lucide-react.min.js"></script>
-    <script src="https://unpkg.com/uuid@8.3.2/dist/umd/uuid.min.js"></script>
-    <script src="https://unpkg.com/clsx@1.2.1/dist/clsx.min.js"></script>
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Babel for JSX transformation -->
+    <script crossorigin src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Utilities -->
+    <script crossorigin src="https://unpkg.com/uuid@8.3.2/dist/umd/uuid.min.js"></script>
+    <script crossorigin src="https://unpkg.com/clsx@1.2.1/dist/clsx.min.js"></script>
+    
+    <!-- Icons (Lucide) -->
+    <!-- Note: UMD build exposes 'lucide' global -->
+    <script crossorigin src="https://unpkg.com/lucide-react@0.263.1/dist/umd/lucide-react.min.js"></script>
 
     <style>
       /* Prevent pull-to-refresh on iPad */
@@ -101,21 +109,21 @@
 
     <script type="text/babel" data-presets="typescript,react">
         /**
-         * GLOBAL IMPORTS MAPPING
+         * GLOBAL SETUP
          */
         const { useState, useEffect, useCallback, useRef } = React;
         const { createRoot } = ReactDOM;
         const clsx = window.clsx;
         const { v4: uuidv4 } = window.uuid;
-        const { Ghost, Palette, Layers, PlusSquare, Download, ChevronUp, ChevronDown, Move, RotateCcw, Play, AlertTriangle } = window.lucideReact;
+        // lucide-react UMD exposes 'lucide'
+        const { Ghost, Palette, Layers, PlusSquare, Download, ChevronUp, ChevronDown, Move, RotateCcw, Play, AlertTriangle } = window.lucide;
 
         /**
          * ==============================
-         * TYPES (types.ts)
+         * TYPES
          * ==============================
          */
         
-        // Interfaces are stripped by Babel TS preset, but we keep them for code structure clarity
         type TileColor = 'BLACK' | 'BLUE' | 'RED' | 'ORANGE';
 
         interface TileData {
@@ -185,7 +193,7 @@
 
         /**
          * ==============================
-         * CONSTANTS (constants.ts)
+         * CONSTANTS
          * ==============================
          */
         const COLORS: TileColor[] = ['BLACK', 'BLUE', 'RED', 'ORANGE'];
@@ -212,7 +220,7 @@
 
         /**
          * ==============================
-         * UTILS (utils/gameLogic.ts)
+         * GAME LOGIC UTILS
          * ==============================
          */
         
@@ -478,6 +486,7 @@
             if (requireValid) return null;
             
             const colors = uniqueTiles.map(t => t.color).filter(c => c !== null);
+            // Fix sort logic to not be destructive if accidentally so, though map creates new array
             const mostCommonColor = colors.sort((a,b) => colors.filter(v => v===a).length - colors.filter(v => v===b).length).pop();
             const sameColorCount = uniqueTiles.filter(t => t.color === mostCommonColor).length;
 
@@ -584,7 +593,7 @@
 
         /**
          * ==============================
-         * AI LOGIC (utils/aiLogic.ts)
+         * AI LOGIC
          * ==============================
          */
         type AIMoveType = 'ADD_TO_SET' | 'PLAY_NEW_SET' | 'DRAW' | 'SWAP_JOKER' | 'STEAL_TILE' | 'SPLIT_SET';
@@ -842,7 +851,7 @@
          * ==============================
          */
         
-        // --- Tile.tsx ---
+        // --- Tile ---
         const Tile = ({ 
           tile, 
           isSelected = false, 
@@ -904,7 +913,7 @@
           );
         };
 
-        // --- PlayerRack.tsx ---
+        // --- PlayerRack ---
         const PlayerRack = ({
           playerId,
           tiles,
@@ -1041,7 +1050,7 @@
           );
         };
 
-        // --- GameBoard.tsx ---
+        // --- GameBoard ---
         const GameBoard = ({ 
             sets, 
             interactionMode, 
@@ -1187,7 +1196,7 @@
           );
         };
 
-        // --- App.tsx ---
+        // --- App ---
         const DEFAULT_STATE: GameState = {
             gamePhase: 'SETUP',
             deck: [],
@@ -1358,9 +1367,8 @@
                 } else {
                     let dropX = 0, dropY = 0;
                     if (targetPosOverride) { dropX = targetPosOverride.x; dropY = targetPosOverride.y; }
-                    else {
-                        const boardEl = document.getElementById('game-board-container');
-                    }
+                    // Fallback to 0,0 (center) implicitly
+                    
                     let orientation = 'BOTTOM';
                     if (sourceWasRack) orientation = sourceSetId === 'RACK_TOP' ? 'TOP' : 'BOTTOM';
                     const setId = specificCreatedSetId || uuidv4();
