@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+<head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -8,54 +8,16 @@
     <meta name="mobile-web-app-capable" content="yes">
     <title>RummyTable Pro</title>
     
-    <!-- PWA Manifest Generation -->
-    <script>
-      (function() {
-        const manifest = {
-          "name": "RummyTable Pro",
-          "short_name": "RummyTable",
-          "start_url": ".",
-          "display": "standalone",
-          "background_color": "#111827",
-          "theme_color": "#1f2937",
-          "orientation": "portrait",
-          "icons": [
-            {
-              "src": "https://placehold.co/192x192/1a472a/fdf6e3?text=RT",
-              "sizes": "192x192",
-              "type": "image/png"
-            },
-            {
-              "src": "https://placehold.co/512x512/1a472a/fdf6e3?text=RT",
-              "sizes": "512x512",
-              "type": "image/png"
-            }
-          ]
-        };
-        const blob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
-        const link = document.createElement('link');
-        link.rel = 'manifest';
-        link.href = URL.createObjectURL(blob);
-        document.head.appendChild(link);
-      })();
-    </script>
-
-    <!-- External Libraries (Globals) -->
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/uuid/8.3.2/uuid.min.js"></script>
-    <script src="https://unpkg.com/clsx@1.2.1/dist/clsx.min.js"></script>
-
     <script>
       tailwind.config = {
         theme: {
           extend: {
             colors: {
               rummy: {
-                board: '#1a472a', // Classic felt green
-                tile: '#fdf6e3',  // Creamy white
+                board: '#1a472a',
+                tile: '#fdf6e3',
                 tileShadow: '#d4c5a3',
                 black: '#1a1a1a',
                 blue: '#0066cc',
@@ -73,2231 +35,1613 @@
         },
       }
     </script>
+
+    <!-- PWA Manifest Generation -->
+    <script>
+      const manifest = {
+        name: "RummyTable Pro",
+        short_name: "RummyPro",
+        start_url: ".",
+        display: "standalone",
+        background_color: "#1a472a",
+        theme_color: "#1a472a",
+        orientation: "any",
+        icons: [
+            {
+                src: "https://cdn-icons-png.flaticon.com/512/3665/3665964.png", 
+                sizes: "512x512",
+                type: "image/png"
+            }
+        ]
+      };
+      const content = encodeURIComponent(JSON.stringify(manifest));
+      const url = "data:application/manifest+json," + content;
+      const link = document.createElement('link');
+      link.rel = 'manifest';
+      link.href = url;
+      document.head.appendChild(link);
+    </script>
+
     <style>
-      /* Prevent pull-to-refresh on iPad */
       body {
         overscroll-behavior-y: none;
         -webkit-user-select: none;
         user-select: none;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        background-color: #111827; /* bg-gray-900 */
+        margin: 0;
+        overflow: hidden;
+      }
+      /* Hide scrollbars */
+      ::-webkit-scrollbar {
+        display: none;
       }
     </style>
+
+    <!-- Dependencies -->
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18.2.0/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
+    
+    <!-- Babel for JSX/TSX transformation in browser -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Libraries -->
+    <script src="https://unpkg.com/clsx@1.2.1/dist/clsx.min.js"></script>
+    <script src="https://unpkg.com/uuid@8.3.2/dist/umd/uuid.min.js"></script>
+    <!-- Lucide React UMD -->
+    <script src="https://unpkg.com/lucide-react@0.263.1/dist/umd/lucide-react.min.js"></script>
 <script type="importmap">
 {
   "imports": {
+    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.555.0",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
     "react": "https://aistudiocdn.com/react@^19.2.0",
     "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
-    "react/": "https://aistudiocdn.com/react@^19.2.0/",
     "uuid": "https://aistudiocdn.com/uuid@^13.0.0",
-    "clsx": "https://aistudiocdn.com/clsx@^2.1.1",
-    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.555.0"
+    "clsx": "https://aistudiocdn.com/clsx@^2.1.1"
   }
 }
 </script>
 </head>
-  <body class="bg-gray-900 overflow-hidden touch-none">
+<body>
     <div id="root"></div>
 
-    <script type="text/babel" data-presets="typescript,react">
-      // --- GLOBALS SETUP ---
-      const { useState, useEffect, useCallback, useRef } = React;
-      const { v4: uuidv4 } = window.uuid;
-      const clsx = window.clsx;
+    <script type="text/babel" data-presets="env,react,typescript">
+    /**
+     * RummyTable Pro - Single File Consolidated Code
+     */
 
-      // --- ICONS (Inline SVG to avoid external UMD issues) ---
-      const Icon = ({ size = 24, className, children, ...props }) => (
-        <svg 
-          xmlns="http://www.w3.org/2000/svg" 
-          width={size} 
-          height={size} 
-          viewBox="0 0 24 24" 
-          fill="none" 
-          stroke="currentColor" 
-          strokeWidth="2" 
-          strokeLinecap="round" 
-          strokeLinejoin="round" 
-          className={className} 
-          {...props}
-        >
-          {children}
-        </svg>
-      );
+    // --- GLOBALS & SHIMS ---
+    const { useState, useEffect, useCallback, useRef } = React;
+    const { v4: uuidv4 } = uuid;
+    // Destructure Icons from Lucide global
+    const { 
+        Ghost, Palette, Layers, PlusSquare, Download, ChevronUp, ChevronDown, 
+        Move, RotateCcw, Play, AlertTriangle 
+    } = lucideReact;
+    
+    // 'clsx' is available globally as 'window.clsx' or just 'clsx'
+    
+    // --- TYPES (TS Interfaces - Babel will strip these but they are good for reference) ---
+    
+    type TileColor = 'BLACK' | 'BLUE' | 'RED' | 'ORANGE';
 
-      const Ghost = (props) => <Icon {...props}><path d="M9 10h.01" /><path d="M15 10h.01" /><path d="M12 2a8 8 0 0 0-8 8v12l3-3 2.5 2.5L12 19l2.5 2.5L17 19l3 3V10a8 8 0 0 0-8-8z" /></Icon>;
-      const Palette = (props) => <Icon {...props}><circle cx="13.5" cy="6.5" r=".5" /><circle cx="17.5" cy="10.5" r=".5" /><circle cx="8.5" cy="7.5" r=".5" /><circle cx="6.5" cy="12.5" r=".5" /><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z" /></Icon>;
-      const Layers = (props) => <Icon {...props}><polygon points="12 2 2 7 12 12 22 7 12 2" /><polyline points="2 17 12 22 22 17" /><polyline points="2 12 12 17 22 12" /></Icon>;
-      const PlusSquare = (props) => <Icon {...props}><rect width="18" height="18" x="3" y="3" rx="2" /><path d="M8 12h8" /><path d="M12 8v8" /></Icon>;
-      const Download = (props) => <Icon {...props}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" x2="12" y1="15" y2="3" /></Icon>;
-      const ChevronUp = (props) => <Icon {...props}><path d="m18 15-6-6-6 6" /></Icon>;
-      const ChevronDown = (props) => <Icon {...props}><path d="m6 9 6 6 6-6" /></Icon>;
-      const Move = (props) => <Icon {...props}><polyline points="5 9 2 12 5 15" /><polyline points="9 5 12 2 15 5" /><polyline points="15 19 12 22 9 19" /><polyline points="19 9 22 12 19 15" /><line x1="2" x2="22" y1="12" y2="12" /><line x1="12" x2="12" y1="2" y2="22" /></Icon>;
-      const RotateCcw = (props) => <Icon {...props}><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><path d="M3 3v5h5" /></Icon>;
-      const Play = (props) => <Icon {...props}><polygon points="5 3 19 12 5 21 5 3" /></Icon>;
-      const AlertTriangle = (props) => <Icon {...props}><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" /><path d="M12 9v4" /><path d="M12 17h.01" /></Icon>;
+    interface TileData {
+      id: string;
+      value: number; // 0 for Joker
+      color: TileColor | null;
+      isJoker: boolean;
+      rackX?: number; // 0 to RACK_COLS-1
+      rackY?: number; // 0 to RACK_ROWS-1
+      isDuplicate?: boolean;
+    }
 
-      // --- CONSTANTS ---
-      const COLORS = ['BLACK', 'BLUE', 'RED', 'ORANGE'];
-      const MIN_VALUE = 1;
-      const MAX_VALUE = 13;
-      const DUPLICATES_PER_DECK = 2; // Two sets of 1-13 per color
-      const JOKER_COUNT = 2;
-      const RACK_COLS = 10; // Start with 10 columns
-      const RACK_ROWS = 2;  // Start with 2 rows, expand to 3 if needed
+    interface BoardSet {
+      id: string;
+      tiles: TileData[];
+      orientation: PlayerId; // 'TOP' | 'BOTTOM'
+      createdBy: PlayerId; 
+      rotation: number;
+      x: number; 
+      y: number; 
+    }
 
-      const COLOR_MAP = {
-        BLACK: 'text-rummy-black',
-        BLUE: 'text-rummy-blue',
-        RED: 'text-rummy-red',
-        ORANGE: 'text-rummy-orange',
+    type SortMethod = 'RUN' | 'GROUP';
+    type PlayerId = 'TOP' | 'BOTTOM';
+    type GamePhase = 'SETUP' | 'PLAYING';
+
+    interface DragState {
+      isDragging: boolean;
+      tileId: string | null;
+      sourceSetId: string | null; 
+      x: number;
+      y: number;
+      startX: number;
+      startY: number;
+      tileData: TileData | null;
+      
+      // Set Manipulation
+      draggingSetId: string | null;
+      initialSetPos: { x: number, y: number } | null;
+    }
+
+    interface GameState {
+      gamePhase: GamePhase;
+      deck: TileData[];
+      board: BoardSet[];
+      boardSnapshot: BoardSet[] | null; 
+      rackSnapshots: { TOP: TileData[], BOTTOM: TileData[] } | null; 
+      playerTopHand: TileData[];
+      playerBottomHand: TileData[];
+      playerTopSort: SortMethod;
+      playerBottomSort: SortMethod;
+      selectedTileIds: Record<PlayerId, string[]>;
+      activePlayer: PlayerId | null;
+      interactionMode: 'IDLE' | 'REORDER_BOARD' | 'SPLIT_SET';
+      activeDrags: Record<number, DragState>;
+      setupState: {
+        topCard: TileData | null;
+        bottomCard: TileData | null;
       };
+      lastDrawnTileId: Record<PlayerId, string | null>;
+    }
 
-      const HEX_MAP = {
-          BLACK: '#1a1a1a',
-          BLUE: '#0066cc',
-          RED: '#cc0000',
-          ORANGE: '#e69500',
-      };
+    // --- CONSTANTS ---
+    const COLORS: TileColor[] = ['BLACK', 'BLUE', 'RED', 'ORANGE'];
+    const MIN_VALUE = 1;
+    const MAX_VALUE = 13;
+    const DUPLICATES_PER_DECK = 2; 
+    const JOKER_COUNT = 2;
+    const RACK_COLS = 10; 
+    const RACK_ROWS = 2; 
 
-      // --- TYPES (Keeping structure implicitly) ---
+    const COLOR_MAP: Record<TileColor, string> = {
+      BLACK: 'text-rummy-black',
+      BLUE: 'text-rummy-blue',
+      RED: 'text-rummy-red',
+      ORANGE: 'text-rummy-orange',
+    };
 
-      // --- UTILS: GAME LOGIC ---
+    // --- UTILS: GAME LOGIC ---
 
-      const generateDeck = () => {
-        const deck = [];
-
-        // Generate Number Tiles
-        COLORS.forEach(color => {
-          for (let i = 0; i < DUPLICATES_PER_DECK; i++) {
-            for (let val = MIN_VALUE; val <= MAX_VALUE; val++) {
-              deck.push({
-                id: uuidv4(),
-                value: val,
-                color: color,
-                isJoker: false,
-              });
-            }
+    const generateDeck = (): TileData[] => {
+      const deck: TileData[] = [];
+      COLORS.forEach(color => {
+        for (let i = 0; i < DUPLICATES_PER_DECK; i++) {
+          for (let val = MIN_VALUE; val <= MAX_VALUE; val++) {
+            deck.push({
+              id: uuidv4(),
+              value: val,
+              color: color,
+              isJoker: false,
+            });
           }
+        }
+      });
+      const jokerColors: TileColor[] = ['BLACK', 'RED'];
+      for (let i = 0; i < JOKER_COUNT; i++) {
+        deck.push({
+          id: uuidv4(),
+          value: 0,
+          color: jokerColors[i % jokerColors.length], 
+          isJoker: true,
         });
-
-        // Generate Jokers (One Black, One Red)
-        const jokerColors = ['BLACK', 'RED'];
-        for (let i = 0; i < JOKER_COUNT; i++) {
-          deck.push({
-            id: uuidv4(),
-            value: 0,
-            color: jokerColors[i % jokerColors.length], 
-            isJoker: true,
-          });
-        }
-
-        return shuffleDeck(deck);
-      };
-
-      const shuffleDeck = (deck) => {
-        const newDeck = [...deck];
-        for (let i = newDeck.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [newDeck[i], newDeck[j]] = [newDeck[j], newDeck[i]];
-        }
-        return newDeck;
-      };
-
-      const sortTiles = (tiles, method) => {
-        const sorted = [...tiles];
-
-        switch (method) {
-          case 'RUN': // Sort by Color, then Value
-            return sorted.sort((a, b) => {
-               if (a.isJoker) return 1;
-               if (b.isJoker) return -1;
-               if (a.color !== b.color) return (a.color || '').localeCompare(b.color || '');
-               return a.value - b.value;
-            });
-
-          case 'GROUP': // Sort by Value, then Color
-            return sorted.sort((a, b) => {
-              if (a.isJoker) return 1;
-              if (b.isJoker) return -1;
-              if (a.value !== b.value) return a.value - b.value;
-              return (a.color || '').localeCompare(b.color || '');
-            });
-            
-          default:
-            return sorted;
-        }
-      };
-
-      const sortHand = (tiles, method) => {
-          // 1. Sort Logical Order
-          const sorted = sortTiles(tiles, method);
-          
-          // 2. Separate into Unique and Duplicates AND Tag
-          const unique = [];
-          const duplicates = [];
-          const seen = new Set();
-
-          sorted.forEach(tile => {
-              const key = tile.isJoker ? 'JOKER' : `${tile.color}-${tile.value}`;
-              if (seen.has(key)) {
-                  tile.isDuplicate = true;
-                  duplicates.push(tile);
-              } else {
-                  tile.isDuplicate = false;
-                  seen.add(key);
-                  unique.push(tile);
-              }
-          });
-
-          // 3. Assign Grid Positions
-          const totalTiles = tiles.length;
-          const dynamicRows = totalTiles > (RACK_ROWS * RACK_COLS) ? 3 : RACK_ROWS;
-          const dynamicCols = Math.max(RACK_COLS, Math.ceil(totalTiles / dynamicRows));
-
-          const positionedTiles = [];
-
-          // Place Unique: Top-Left -> Right -> Down
-          let uCol = 0;
-          let uRow = 0;
-          unique.forEach(tile => {
-              positionedTiles.push({ ...tile, rackX: uCol, rackY: uRow });
-              uCol++;
-              if (uCol >= dynamicCols) {
-                  uCol = 0;
-                  uRow++;
-              }
-          });
-
-          // Place Duplicates: Bottom-Right -> Left -> Up
-          let dCol = dynamicCols - 1;
-          let dRow = dynamicRows - 1;
-          duplicates.forEach(tile => {
-              positionedTiles.push({ ...tile, rackX: dCol, rackY: dRow });
-              dCol--;
-              if (dCol < 0) {
-                   dCol = dynamicCols - 1;
-                   dRow--;
-              }
-          });
-
-          return positionedTiles;
-      };
-
-      const findFreeRackSlot = (tiles) => {
-          const totalTiles = tiles.length;
-          const maxValX = tiles.reduce((max, t) => Math.max(max, t.rackX || 0), 0);
-          
-          const dynamicRows = totalTiles > (RACK_ROWS * RACK_COLS) ? 3 : RACK_ROWS;
-          const dynamicCols = Math.max(RACK_COLS, Math.ceil(totalTiles / dynamicRows), maxValX + 1);
-
-          const occupied = new Set();
-          tiles.forEach(t => {
-              if (t.rackX !== undefined && t.rackY !== undefined) {
-                  occupied.add(`${t.rackX},${t.rackY}`);
-              }
-          });
-
-          for (let r = 0; r < dynamicRows; r++) {
-              for (let c = 0; c < dynamicCols; c++) {
-                  if (!occupied.has(`${c},${r}`)) {
-                      return { x: c, y: r };
-                  }
-              }
-          }
-          
-          return { x: dynamicCols, y: 0 };
-      };
-
-      const organizeRun = (tiles) => {
-          const jokers = tiles.filter(t => t.isJoker);
-          const nonJokers = tiles.filter(t => !t.isJoker).sort((a, b) => a.value - b.value);
-
-          if (nonJokers.length === 0) return tiles;
-
-          const uniqueNonJokers = [];
-          if (nonJokers.length > 0) {
-              uniqueNonJokers.push(nonJokers[0]);
-              for (let i = 1; i < nonJokers.length; i++) {
-                  if (nonJokers[i].value !== nonJokers[i-1].value) {
-                      uniqueNonJokers.push(nonJokers[i]);
-                  }
-              }
-          } else {
-              return tiles;
-          }
-
-          const result = [];
-          let currentVal = uniqueNonJokers[0].value;
-          result.push(uniqueNonJokers[0]);
-
-          for (let i = 1; i < uniqueNonJokers.length; i++) {
-              const nextTile = uniqueNonJokers[i];
-              const gap = nextTile.value - currentVal - 1;
-              
-              for (let k = 0; k < gap; k++) {
-                  if (jokers.length > 0) {
-                      result.push(jokers.pop());
-                      currentVal++;
-                  }
-              }
-              
-              result.push(nextTile);
-              currentVal = nextTile.value;
-          }
-
-          while (jokers.length > 0) {
-              if (currentVal < MAX_VALUE) {
-                  result.push(jokers.pop());
-                  currentVal++;
-              } else {
-                  result.unshift(jokers.pop());
-              }
-          }
-          
-          const skipped = nonJokers.filter(t => !uniqueNonJokers.includes(t));
-          result.push(...skipped);
-
-          return result;
-      };
-
-      const isValidSet = (tiles) => {
-        if (tiles.length < 3) return false;
-
-        const jokers = tiles.filter(t => t.isJoker);
-        const nonJokers = tiles.filter(t => !t.isJoker);
-
-        // 1. Check Group
-        const isGroup = () => {
-          if (tiles.length > 4) return false;
-          if (nonJokers.length === 0) return true;
-
-          const targetValue = nonJokers[0].value;
-          const seenColors = new Set();
-          
-          for (const tile of nonJokers) {
-            if (tile.value !== targetValue) return false;
-            if (tile.color && seenColors.has(tile.color)) return false;
-            if (tile.color) seenColors.add(tile.color);
-          }
-          return true;
-        };
-
-        // 2. Check Run
-        const isRun = () => {
-           if (tiles.length > 13) return false;
-           if (nonJokers.length === 0) return true;
-
-           const targetColor = nonJokers[0].color;
-           if (!nonJokers.every(t => t.color === targetColor)) return false;
-
-           const sortedNonJokers = [...nonJokers].sort((a, b) => a.value - b.value);
-
-           let jokersAvailable = jokers.length;
-           
-           for (let i = 0; i < sortedNonJokers.length - 1; i++) {
-              const current = sortedNonJokers[i].value;
-              const next = sortedNonJokers[i+1].value;
-              
-              if (current === next) return false;
-              
-              const gap = next - current - 1; 
-              
-              if (gap > 0) {
-                  if (jokersAvailable >= gap) {
-                      jokersAvailable -= gap;
-                  } else {
-                      return false;
-                  }
-              }
-           }
-           return true;
-        };
-
-        return isGroup() || isRun();
-      };
-
-      const autoSortSet = (tiles, requireValid = true) => {
-          const seen = new Set();
-          const uniqueTiles = [];
-          for (const t of tiles) {
-              if (!seen.has(t.id)) {
-                  seen.add(t.id);
-                  uniqueTiles.push(t);
-              }
-          }
-
-          const runSorted = sortTiles(uniqueTiles, 'RUN');
-          if (isValidSet(runSorted)) {
-              return organizeRun(uniqueTiles);
-          }
-
-          const groupSorted = sortTiles(uniqueTiles, 'GROUP');
-          if (isValidSet(groupSorted)) return groupSorted;
-
-          if (requireValid) return null;
-          
-          const colors = uniqueTiles.map(t => t.color).filter(c => c !== null);
-          const mostCommonColor = colors.sort((a,b) => colors.filter(v => v===a).length - colors.filter(v => v===b).length).pop();
-          const sameColorCount = uniqueTiles.filter(t => t.color === mostCommonColor).length;
-
-          if (sameColorCount > uniqueTiles.length / 2) {
-              return runSorted;
-          }
-          return groupSorted;
-      };
-
-      const validateMove = (existingTiles, newTiles) => {
-          const combined = [...existingTiles, ...newTiles];
-          return autoSortSet(combined);
       }
+      return shuffleDeck(deck);
+    };
 
-      const validateBoard = (board) => {
-          return board.every(set => isValidSet(set.tiles));
-      };
+    const shuffleDeck = (deck: TileData[]): TileData[] => {
+      const newDeck = [...deck];
+      for (let i = newDeck.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [newDeck[i], newDeck[j]] = [newDeck[j], newDeck[i]];
+      }
+      return newDeck;
+    };
 
-      const getSetDimensions = (tileCount) => {
-          const tileWidth = 48;
-          const gap = 1;
-          const padding = 2;
-          
-          const width = (tileCount * tileWidth) + ((tileCount - 1) * gap) + padding;
-          const height = 80;
-          return { width, height };
-      };
-
-      const doRectsIntersect = (r1, r2) => {
-          return !(r2.x - r2.w/2 > r1.x + r1.w/2 || 
-                   r2.x + r2.w/2 < r1.x - r1.w/2 || 
-                   r2.y - r2.h/2 > r1.y + r1.h/2 || 
-                   r2.y + r2.h/2 < r1.y - r1.h/2);
-      };
-
-      const findFreePosition = (existingSets, tileCount) => {
-          const { width, height } = getSetDimensions(tileCount);
-          const buffer = 2;
-          const newRect = { x: 0, y: 0, w: width + buffer, h: height + buffer };
-          
-          const a = 5;
-          let angle = 0;
-          const step = 0.1;
-          let i = 0;
-
-          while (i < 5000) {
-              const radius = a * angle;
-              newRect.x = i === 0 ? 0 : radius * Math.cos(angle);
-              newRect.y = i === 0 ? 0 : radius * Math.sin(angle);
-
-              const hasCollision = existingSets.some(set => {
-                  const dim = getSetDimensions(set.tiles.length);
-                  return doRectsIntersect(newRect, { 
-                      x: set.x, 
-                      y: set.y, 
-                      w: dim.width + buffer, 
-                      h: dim.height + buffer 
-                  });
-              });
-
-              if (!hasCollision) {
-                  return { x: newRect.x, y: newRect.y };
-              }
-              angle += step;
-              i++;
-          }
-          
-          return { x: 0, y: 0 };
-      };
-
-      const compactBoardLogic = (sets) => {
-          const sortedSets = [...sets].sort((a, b) => {
-              const distA = Math.hypot(a.x, a.y);
-              const distB = Math.hypot(b.x, b.y);
-              return distA - distB;
+    const sortTiles = (tiles: TileData[], method: SortMethod): TileData[] => {
+      const sorted = [...tiles];
+      switch (method) {
+        case 'RUN': 
+          return sorted.sort((a, b) => {
+             if (a.isJoker) return 1;
+             if (b.isJoker) return -1;
+             if (a.color !== b.color) return (a.color || '').localeCompare(b.color || '');
+             return a.value - b.value;
           });
-
-          const compactedSets = [];
-          
-          for (const set of sortedSets) {
-              const { width, height } = getSetDimensions(set.tiles.length);
-              const buffer = 2;
-              const setRect = { x: 0, y: 0, w: width + buffer, h: height + buffer };
-              
-              const angle = Math.atan2(set.y, set.x);
-              const maxDist = Math.hypot(set.x, set.y);
-              let validX = set.x;
-              let validY = set.y;
-              const rayStep = 5;
-              
-              for (let r = 0; r <= maxDist; r += rayStep) {
-                   setRect.x = r * Math.cos(angle);
-                   setRect.y = r * Math.sin(angle);
-                   
-                   const collision = compactedSets.some(placedSet => {
-                       const dim = getSetDimensions(placedSet.tiles.length);
-                       return doRectsIntersect(setRect, {
-                           x: placedSet.x,
-                           y: placedSet.y,
-                           w: dim.width + buffer,
-                           h: dim.height + buffer
-                       });
-                   });
-                   
-                   if (!collision) {
-                       validX = setRect.x;
-                       validY = setRect.y;
-                       break;
-                   }
-              }
-              compactedSets.push({ ...set, x: validX, y: validY });
-          }
-          return compactedSets;
-      };
-
-      // --- UTILS: AI LOGIC ---
-
-      const getJokerIdentity = (set, jokerId) => {
-          const nonJokers = set.filter(t => !t.isJoker);
-          if (nonJokers.length === 0) return null;
-
-          const sorted = sortTiles(nonJokers, 'RUN');
-          const isSameColor = sorted.every(t => t.color === sorted[0].color);
-          
-          if (isSameColor) {
-              const jokerIndex = set.findIndex(t => t.id === jokerId);
-              const prev = set[jokerIndex - 1];
-              const next = set[jokerIndex + 1];
-              
-              if (prev && !prev.isJoker) return { value: prev.value + 1, color: prev.color };
-              if (next && !next.isJoker) return { value: next.value - 1, color: next.color };
-          }
-
-          const firstVal = nonJokers[0].value;
-          if (nonJokers.every(t => t.value === firstVal)) {
-              return { value: firstVal, color: null };
-          }
-
-          return null;
-      };
-
-      const calculateNextAIMove = (hand, board) => {
-          const jokersInHand = hand.filter(t => t.isJoker);
-          const nonJokersInHand = hand.filter(t => !t.isJoker);
-
-          // 0. SWAP JOKER
-          for (const set of board) {
-              const joker = set.tiles.find(t => t.isJoker);
-              if (joker) {
-                  const identity = getJokerIdentity(set.tiles, joker.id);
-                  if (identity) {
-                      const match = hand.find(t => 
-                          !t.isJoker && 
-                          t.value === identity.value && 
-                          (identity.color === null ? 
-                              !set.tiles.some(st => !st.isJoker && st.color === t.color) 
-                              : t.color === identity.color)
-                      );
-                      if (match) {
-                          return { type: 'SWAP_JOKER', tiles: [match], targetSetId: set.id, jokerId: joker.id };
-                      }
-                  }
-              }
-          }
-
-          // 1. ADD TO SET
-          for (const tile of hand) {
-              for (const set of board) {
-                  if (validateMove(set.tiles, [tile])) {
-                      return { type: 'ADD_TO_SET', tiles: [tile], targetSetId: set.id };
-                  }
-              }
-          }
-
-          // 2. PLAY NEW SET
-          const byValue = {};
-          nonJokersInHand.forEach(t => {
-              if (!byValue[t.value]) byValue[t.value] = [];
-              byValue[t.value].push(t);
+        case 'GROUP': 
+          return sorted.sort((a, b) => {
+            if (a.isJoker) return 1;
+            if (b.isJoker) return -1;
+            if (a.value !== b.value) return a.value - b.value;
+            return (a.color || '').localeCompare(b.color || '');
           });
+        default:
+          return sorted;
+      }
+    };
 
-          for (const valStr in byValue) {
-              const group = byValue[valStr];
-              const needed = 3 - group.length;
-              if (needed <= jokersInHand.length) {
-                  const candidate = [...group, ...jokersInHand.slice(0, Math.max(0, needed))];
-                  if (candidate.length < 3) {
-                       const moreJokers = jokersInHand.slice(Math.max(0, needed), 4 - group.length);
-                       candidate.push(...moreJokers);
-                  }
-                  if (candidate.length >= 3) {
-                       const sortedCandidate = autoSortSet(candidate);
-                       if (sortedCandidate) {
-                           const pos = findFreePosition(board, sortedCandidate.length);
-                           return { type: 'PLAY_NEW_SET', tiles: sortedCandidate, targetPos: pos };
-                       }
-                  }
-              }
-          }
+    const sortHand = (tiles: TileData[], method: SortMethod): TileData[] => {
+        const sorted = sortTiles(tiles, method);
+        const unique: TileData[] = [];
+        const duplicates: TileData[] = [];
+        const seen = new Set<string>();
 
-          const byColor = {};
-          nonJokersInHand.forEach(t => {
-              if (t.color) {
-                  if (!byColor[t.color]) byColor[t.color] = [];
-                  byColor[t.color].push(t);
-              }
-          });
-
-          for (const color in byColor) {
-              const tiles = byColor[color].sort((a,b) => a.value - b.value);
-              for (let i = 0; i < tiles.length; i++) {
-                  let currentRun = [tiles[i]];
-                  let jokersUsed = 0;
-                  let lastVal = tiles[i].value;
-
-                  for (let j = i + 1; j < tiles.length; j++) {
-                      const diff = tiles[j].value - lastVal;
-                      const needed = diff - 1;
-                      if (diff === 0) continue; 
-                      if (jokersInHand.length - jokersUsed >= needed) {
-                          for(let k=0; k<needed; k++) currentRun.push(jokersInHand[jokersUsed + k]);
-                          jokersUsed += needed;
-                          currentRun.push(tiles[j]);
-                          lastVal = tiles[j].value;
-                          if (currentRun.length >= 3) {
-                              const sortedRun = autoSortSet(currentRun);
-                              if (sortedRun) {
-                                   const pos = findFreePosition(board, sortedRun.length);
-                                   return { type: 'PLAY_NEW_SET', tiles: sortedRun, targetPos: pos };
-                              }
-                          }
-                      } else { break; }
-                  }
-                  
-                  if (currentRun.length === 2 && jokersInHand.length - jokersUsed >= 1) {
-                      currentRun.push(jokersInHand[jokersUsed]);
-                      const sortedRun = autoSortSet(currentRun);
-                      if (sortedRun) {
-                          const pos = findFreePosition(board, sortedRun.length);
-                          return { type: 'PLAY_NEW_SET', tiles: sortedRun, targetPos: pos };
-                      }
-                  }
-              }
-          }
-
-          // 3. SPLIT RUN
-          for (const set of board) {
-              if (set.tiles.length >= 5) {
-                   const nonJokers = set.tiles.filter(t => !t.isJoker);
-                   if (nonJokers.length >= 2 && nonJokers[0].color === nonJokers[1].color) {
-                       const runColor = nonJokers[0].color;
-                       for (const tile of hand) {
-                           if (tile.isJoker) continue;
-                           if (tile.color !== runColor) continue;
-                           if (set.tiles.some(t => !t.isJoker && t.value === tile.value)) {
-                               const combined = [...set.tiles, tile];
-                               const sorted = sortTiles(combined, 'RUN');
-                               for (let i = 0; i < sorted.length - 1; i++) {
-                                   const t1 = sorted[i];
-                                   const t2 = sorted[i+1];
-                                   if (!t1.isJoker && !t2.isJoker && t1.value === t2.value) {
-                                       const left = sorted.slice(0, i+1);
-                                       const right = sorted.slice(i+1);
-                                       if (isValidSet(left) && isValidSet(right)) {
-                                           return { type: 'SPLIT_SET', tiles: [tile], splitSetId: set.id, newSet1: left, newSet2: right };
-                                       }
-                                   }
-                               }
-                           }
-                       }
-                   }
-              }
-          }
-          
-          // 4. STEAL TILE
-          const partialSets = [];
-          for (const valStr in byValue) {
-              const group = byValue[valStr];
-              if (group.length === 2) partialSets.push({ tiles: group, neededVal: parseInt(valStr), type: 'GROUP' });
-          }
-          for (const color in byColor) {
-              const tiles = byColor[color].sort((a,b) => a.value - b.value);
-              for(let i=0; i<tiles.length-1; i++) {
-                  const t1 = tiles[i];
-                  const t2 = tiles[i+1];
-                  if (t2.value - t1.value === 1) {
-                      if (t1.value > 1) partialSets.push({ tiles: [t1, t2], neededVal: t1.value - 1, neededColor: color, type: 'RUN' });
-                      if (t2.value < 13) partialSets.push({ tiles: [t1, t2], neededVal: t2.value + 1, neededColor: color, type: 'RUN' });
-                  } else if (t2.value - t1.value === 2) {
-                      partialSets.push({ tiles: [t1, t2], neededVal: t1.value + 1, neededColor: color, type: 'RUN' });
-                  }
-              }
-          }
-
-          for (const partial of partialSets) {
-              for (const set of board) {
-                  const targetTileIndex = set.tiles.findIndex(t => 
-                      !t.isJoker && 
-                      t.value === partial.neededVal && 
-                      (partial.type === 'RUN' ? t.color === partial.neededColor : t.color !== partial.tiles[0].color && t.color !== partial.tiles[1].color)
-                  );
-
-                  if (targetTileIndex !== -1) {
-                      const tileToSteal = set.tiles[targetTileIndex];
-                      const remainder = [...set.tiles];
-                      remainder.splice(targetTileIndex, 1);
-                      const left = remainder.slice(0, targetTileIndex);
-                      const right = remainder.slice(targetTileIndex); 
-                      
-                      let validSteal = false;
-                      let splits = false;
-                      if (remainder.length >= 3 && isValidSet(remainder)) validSteal = true;
-                      else if (left.length >= 3 && isValidSet(left) && right.length >= 3 && isValidSet(right)) { validSteal = true; splits = true; }
-                      else if ((left.length >= 3 && isValidSet(left)) || (right.length >= 3 && isValidSet(right))) validSteal = true;
-
-                      if (validSteal) {
-                          const newSet = [...partial.tiles, tileToSteal];
-                          const sortedNewSet = autoSortSet(newSet);
-                          if (sortedNewSet) {
-                              const pos = findFreePosition(board, sortedNewSet.length);
-                              return { type: 'STEAL_TILE', tiles: sortedNewSet, sourceSetId: set.id, stolenTileId: tileToSteal.id, targetPos: pos, remainderSplit: splits };
-                          }
-                      }
-                  }
-              }
-          }
-
-          return { type: 'DRAW', tiles: [] };
-      };
-
-      // --- COMPONENT: TILE ---
-
-      const Tile = ({ 
-        tile, 
-        isSelected = false, 
-        isDragging = false,
-        isNew = false,
-        size = 'md' 
-      }) => {
-        const colorClass = tile.color ? COLOR_MAP[tile.color] : 'text-gray-800';
-        
-        const sizeClasses = {
-          sm: 'w-8 h-12 text-xl',
-          md: 'w-10 h-14 text-3xl md:w-12 md:h-16 md:text-4xl',
-          lg: 'w-14 h-20 text-6xl',
-        };
-
-        const jokerSizes = {
-            sm: 20,
-            md: 32,
-            lg: 40
-        };
-
-        const isSixOrNine = !tile.isJoker && (tile.value === 6 || tile.value === 9);
-
-        return (
-          <div
-            className={clsx(
-              "relative flex items-center justify-center rounded-md transition-transform duration-150 select-none cursor-pointer overflow-hidden",
-              "bg-rummy-tile shadow-tile",
-              isSelected ? "shadow-tile-selected -translate-y-1" : "",
-              sizeClasses[size],
-              isSelected ? "" : (
-                  isNew ? "border-4 border-green-500 box-border" : (
-                      tile.isDuplicate ? "border-4 border-gray-400 border-dashed box-border" : "border border-gray-100"
-                  )
-              ),
-              isDragging ? "opacity-0" : "opacity-100" 
-            )}
-          >
-              <div className={clsx("font-bold tracking-tighter flex items-center justify-center w-full h-full", colorClass)}>
-                  {tile.isJoker ? (
-                      <Ghost size={jokerSizes[size]} className="mx-auto" />
-                  ) : (
-                      <div className="flex flex-col items-center justify-center -mt-2">
-                          <span>{tile.value}</span>
-                          {isSixOrNine && (
-                              <div className="w-full h-[3px] bg-current mt-[0px] opacity-60 rounded-full"></div>
-                          )}
-                      </div>
-                  )}
-              </div>
-              <div className="absolute inset-0 rounded-md shadow-[inset_0_1px_1px_rgba(255,255,255,0.6),inset_0_-1px_1px_rgba(0,0,0,0.1)] pointer-events-none"></div>
-          </div>
-        );
-      };
-
-      // --- COMPONENT: PLAYER RACK ---
-
-      const PlayerRack = ({
-        playerId,
-        tiles,
-        selectedTileIds,
-        draggedTileIds,
-        onSort,
-        onDraw,
-        onPlayNewSet,
-        onDragStart,
-        interactionMode,
-        disabled = false,
-        newTileId = null
-      }) => {
-        const isTop = playerId === 'TOP';
-        const [windowWidth, setWindowWidth] = useState(window.innerWidth);
-        const [offsetY, setOffsetY] = useState(0);
-
-        const TILE_WIDTH = 50; 
-        const TILE_HEIGHT = 70; 
+        sorted.forEach(tile => {
+            const key = tile.isJoker ? 'JOKER' : `${tile.color}-${tile.value}`;
+            if (seen.has(key)) {
+                tile.isDuplicate = true;
+                duplicates.push(tile);
+            } else {
+                tile.isDuplicate = false;
+                seen.add(key);
+                unique.push(tile);
+            }
+        });
 
         const totalTiles = tiles.length;
         const dynamicRows = totalTiles > (RACK_ROWS * RACK_COLS) ? 3 : RACK_ROWS;
-        const maxTileX = tiles.reduce((max, t) => Math.max(max, t.rackX || 0), 0);
-        const tileBasedCols = Math.ceil(tiles.length / dynamicRows);
-        const dynamicCols = Math.max(RACK_COLS, tileBasedCols, maxTileX + 1);
+        const dynamicCols = Math.max(RACK_COLS, Math.ceil(totalTiles / dynamicRows));
+        const positionedTiles: TileData[] = [];
 
-        const RAW_GRID_WIDTH = dynamicCols * TILE_WIDTH;
-        const RAW_GRID_HEIGHT = dynamicRows * TILE_HEIGHT;
-
-        const BUTTON_PANEL_WIDTH = 90;
-        const TOTAL_BUTTON_SPACE = (BUTTON_PANEL_WIDTH * 2) + 32;
-        const availableWidth = windowWidth - TOTAL_BUTTON_SPACE;
-        
-        const scale = Math.min(1, availableWidth / RAW_GRID_WIDTH);
-
-        const renderedWidth = RAW_GRID_WIDTH * scale;
-        const renderedHeight = RAW_GRID_HEIGHT * scale;
-
-        useEffect(() => {
-          const handleResize = () => setWindowWidth(window.innerWidth);
-          window.addEventListener('resize', handleResize);
-          return () => window.removeEventListener('resize', handleResize);
-        }, []);
-
-        const gridMap = {};
-        tiles.forEach(t => {
-            const x = t.rackX ?? 0;
-            const y = t.rackY ?? 0;
-            gridMap[`${x},${y}`] = t;
+        let uCol = 0;
+        let uRow = 0;
+        unique.forEach(tile => {
+            positionedTiles.push({ ...tile, rackX: uCol, rackY: uRow });
+            uCol++;
+            if (uCol >= dynamicCols) {
+                uCol = 0;
+                uRow++;
+            }
         });
 
-        const handleMoveVisualUp = (e) => {
-            e.stopPropagation();
-            setOffsetY(prev => prev + (isTop ? 10 : -10));
-        };
-
-        const handleMoveVisualDown = (e) => {
-            e.stopPropagation();
-            setOffsetY(prev => prev + (isTop ? -10 : 10));
-        };
-
-        return (
-          <div 
-            className={clsx(
-              "flex items-center justify-between p-2 bg-gray-800/95 shadow-2xl backdrop-blur-sm z-40 w-full transition-all duration-300 select-none box-border absolute left-0 right-0",
-              isTop ? "top-0 border-b-4 border-gray-700" : "bottom-0 border-t-4 border-gray-700",
-              disabled ? "opacity-40 pointer-events-none grayscale" : "opacity-100"
-            )}
-            data-rack-id={playerId}
-            style={{ 
-                touchAction: 'none',
-                transform: isTop 
-                  ? `rotate(180deg) translateY(${offsetY}px)` 
-                  : `translateY(${offsetY}px)`
-            }} 
-          >
-            <div className="flex flex-col gap-2 flex-shrink-0 z-20 w-[80px]">
-                {!isTop && (
-                  <div className="flex gap-1 mb-1 w-full">
-                      <button 
-                          onPointerDown={handleMoveVisualUp} 
-                          className="flex-1 bg-gray-700 text-gray-300 rounded p-1 flex items-center justify-center shadow-md active:bg-gray-600 active:text-white transition-colors h-10"
-                      >
-                          <ChevronUp size={24} />
-                      </button>
-                      <button 
-                          onPointerDown={handleMoveVisualDown} 
-                          className="flex-1 bg-gray-700 text-gray-300 rounded p-1 flex items-center justify-center shadow-md active:bg-gray-600 active:text-white transition-colors h-10"
-                      >
-                          <ChevronDown size={24} />
-                      </button>
-                  </div>
-                )}
-                <button onClick={() => onSort('GROUP')} className="flex flex-col items-center justify-center p-2 bg-gray-700 rounded text-white active:bg-gray-600 hover:bg-gray-600 transition-colors h-16 w-full shadow-md">
-                  <Layers size={24} />
-                  <span className="text-[10px] font-bold mt-1">123</span>
-                </button>
-                <button onClick={() => onSort('RUN')} className="flex flex-col items-center justify-center p-2 bg-gray-700 rounded text-white active:bg-gray-600 hover:bg-gray-600 transition-colors h-16 w-full shadow-md">
-                  <Palette size={24} />
-                  <span className="text-[10px] font-bold mt-1">Colors</span>
-                </button>
-            </div>
-
-            <div className="flex-grow flex justify-center items-center overflow-hidden h-full">
-              <div 
-                  className="relative overflow-visible"
-                  style={{ width: renderedWidth, height: renderedHeight }}
-              >
-                  <div 
-                      className="absolute top-0 left-0 origin-top-left"
-                      style={{ 
-                          width: RAW_GRID_WIDTH,
-                          height: RAW_GRID_HEIGHT,
-                          transform: `scale(${scale})`,
-                      }}
-                  >
-                      {Array.from({ length: dynamicRows }).map((_, r) => (
-                          Array.from({ length: dynamicCols }).map((_, c) => {
-                              const tile = gridMap[`${c},${r}`];
-                              return (
-                                  <div
-                                      key={`${c}-${r}`}
-                                      data-slot-x={c}
-                                      data-slot-y={r}
-                                      className="absolute w-[48px] h-[64px] rounded border-transparent"
-                                      style={{ left: c * 50, top: r * 70 }}
-                                  >
-                                      {tile && (
-                                          <div
-                                              data-tile-id={tile.id}
-                                              onPointerDown={(e) => {
-                                                  if (interactionMode === 'IDLE' || interactionMode === 'REORDER_BOARD') {
-                                                      onDragStart(e, tile, `RACK_${playerId}`);
-                                                  }
-                                              }}
-                                              className="touch-none w-full h-full"
-                                          >
-                                              <Tile
-                                                  tile={tile}
-                                                  isSelected={selectedTileIds.includes(tile.id)}
-                                                  isDragging={draggedTileIds.includes(tile.id)}
-                                                  isNew={tile.id === newTileId}
-                                                  size="md"
-                                              />
-                                          </div>
-                                      )}
-                                  </div>
-                              );
-                          })
-                      ))}
-                  </div>
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-2 flex-shrink-0 z-20 w-[80px]">
-                 <button 
-                   onClick={onDraw} 
-                   className="flex flex-col items-center justify-center p-2 bg-gray-600 rounded text-white font-bold text-sm active:scale-95 transition-transform h-14 w-full shadow-lg"
-                  >
-                   <Download size={20} className="mb-1" />
-                   <span className="text-[10px]">DRAW</span>
-                 </button>
-                 <button 
-                   onClick={onPlayNewSet} 
-                   className="flex flex-col items-center justify-center p-2 bg-green-700 rounded text-white font-bold text-sm active:scale-95 transition-transform shadow-lg h-14 w-full"
-                 >
-                   <PlusSquare size={20} className="mb-1" />
-                   <span className="text-[10px]">PLAY SET</span>
-                 </button>
-            </div>
-          </div>
-        );
-      };
-
-      // --- COMPONENT: GAME BOARD ---
-
-      const GameBoard = ({ 
-          sets, 
-          interactionMode, 
-          gamePhase,
-          setupState,
-          draggedTileIds,
-          hasSelectedTiles,
-          onSetClick, 
-          onToggleReorder,
-          onResetBoard,
-          onResetGame,
-          onDragStart,
-          onSetupDraw,
-          onStartGame,
-          onSetDragStart,
-          onSetRotate,
-          onCycleRotate,
-          onCompactBoard,
-          onToggleSplit,
-          isAutoPlaying,
-          onToggleAutoPlay
-      }) => {
-        const isReordering = interactionMode === 'REORDER_BOARD';
-        const isSplitting = interactionMode === 'SPLIT_SET';
-        const boardRef = useRef(null);
-        const [boardScale, setBoardScale] = useState(1);
-        const allSetsValid = sets.every(s => isValidSet(s.tiles));
-
-        useEffect(() => {
-            if (sets.length === 0) {
-                setBoardScale(1);
-                return;
+        let dCol = dynamicCols - 1;
+        let dRow = dynamicRows - 1;
+        duplicates.forEach(tile => {
+            positionedTiles.push({ ...tile, rackX: dCol, rackY: dRow });
+            dCol--;
+            if (dCol < 0) {
+                 dCol = dynamicCols - 1;
+                 dRow--;
             }
+        });
 
-            let maxDistX = 0;
-            let maxDistY = 0;
+        return positionedTiles;
+    };
 
-            sets.forEach(set => {
-                const { width, height } = getSetDimensions(set.tiles.length);
-                const distX = Math.abs(set.x) + width / 2;
-                const distY = Math.abs(set.y) + height / 2;
-                if (distX > maxDistX) maxDistX = distX;
-                if (distY > maxDistY) maxDistY = distY;
-            });
+    const findFreeRackSlot = (tiles: TileData[]): {x: number, y: number} => {
+        const totalTiles = tiles.length;
+        const maxValX = tiles.reduce((max, t) => Math.max(max, t.rackX || 0), 0);
+        const dynamicRows = totalTiles > (RACK_ROWS * RACK_COLS) ? 3 : RACK_ROWS;
+        const dynamicCols = Math.max(RACK_COLS, Math.ceil(totalTiles / dynamicRows), maxValX + 1);
 
-            const safeWidth = (window.innerWidth / 2) - 60; 
-            const safeHeight = (window.innerHeight / 2) - 140;
+        const occupied = new Set<string>();
+        tiles.forEach(t => {
+            if (t.rackX !== undefined && t.rackY !== undefined) {
+                occupied.add(`${t.rackX},${t.rackY}`);
+            }
+        });
 
-            let scaleX = 1;
-            let scaleY = 1;
+        for (let r = 0; r < dynamicRows; r++) {
+            for (let c = 0; c < dynamicCols; c++) {
+                if (!occupied.has(`${c},${r}`)) {
+                    return { x: c, y: r };
+                }
+            }
+        }
+        return { x: dynamicCols, y: 0 };
+    };
 
-            if (maxDistX > safeWidth) scaleX = safeWidth / maxDistX;
-            if (maxDistY > safeHeight) scaleY = safeHeight / maxDistY;
+    const organizeRun = (tiles: TileData[]): TileData[] => {
+        const jokers = tiles.filter(t => t.isJoker);
+        const nonJokers = tiles.filter(t => !t.isJoker).sort((a, b) => a.value - b.value);
+        if (nonJokers.length === 0) return tiles;
 
-            setBoardScale(Math.max(0.4, Math.min(1, Math.min(scaleX, scaleY))));
-        }, [sets, window.innerWidth, window.innerHeight]);
-
-        if (gamePhase === 'SETUP') {
-            return (
-                <div className="flex-1 bg-rummy-board relative flex flex-col items-center justify-center overflow-hidden shadow-inner">
-                   <div className="absolute inset-0 opacity-20 pointer-events-none z-0" style={{ backgroundImage: 'radial-gradient(#ffffff 1px, transparent 1px)', backgroundSize: '20px 20px' }}></div>
-                   <div className="relative w-64 h-64 flex items-center justify-center">
-                       {[...Array(6)].map((_, i) => (
-                           <div 
-                              key={i}
-                              className="absolute w-12 h-16 bg-rummy-tile shadow-tile border border-gray-300 rounded"
-                              style={{ 
-                                  transform: `rotate(${Math.random() * 360}deg) translate(${Math.random() * 40 - 20}px, ${Math.random() * 40 - 20}px)`,
-                                  zIndex: 0
-                              }}
-                           />
-                       ))}
-                       {setupState.topCard && setupState.bottomCard && (
-                           <button 
-                              onClick={onStartGame}
-                              className="absolute z-50 bg-green-600 text-white font-bold text-xl px-8 py-4 rounded-full shadow-2xl animate-bounce flex items-center gap-2 hover:bg-green-500 transition-colors"
-                           >
-                               <Play fill="currentColor" /> Start Game
-                           </button>
-                       )}
-                   </div>
-                   <div className="absolute top-20 rotate-180 flex flex-col items-center gap-4">
-                       {setupState.topCard ? (
-                           <div className="scale-150"><Tile tile={setupState.topCard} /></div>
-                       ) : (
-                           <button 
-                              onClick={() => onSetupDraw('TOP')}
-                              className="bg-gray-800 text-white px-6 py-3 rounded-lg shadow-xl font-bold active:scale-95 transition-transform"
-                           >
-                               Draw for Start
-                           </button>
-                       )}
-                   </div>
-                   <div className="absolute bottom-20 flex flex-col items-center gap-4">
-                       {setupState.bottomCard ? (
-                           <div className="scale-150"><Tile tile={setupState.bottomCard} /></div>
-                       ) : (
-                           <button 
-                              onClick={() => onSetupDraw('BOTTOM')}
-                              className="bg-gray-800 text-white px-6 py-3 rounded-lg shadow-xl font-bold active:scale-95 transition-transform"
-                           >
-                               Draw for Start
-                           </button>
-                       )}
-                   </div>
-                </div>
-            );
+        const uniqueNonJokers: TileData[] = [];
+        if (nonJokers.length > 0) {
+            uniqueNonJokers.push(nonJokers[0]);
+            for (let i = 1; i < nonJokers.length; i++) {
+                if (nonJokers[i].value !== nonJokers[i-1].value) {
+                    uniqueNonJokers.push(nonJokers[i]);
+                }
+            }
+        } else {
+            return tiles;
         }
 
-        return (
-          <div 
-              id="game-board-container"
-              ref={boardRef}
-              className="flex-1 bg-rummy-board relative overflow-hidden flex flex-col shadow-inner select-none"
-              style={{ touchAction: isReordering ? 'none' : 'auto' }}
-          >
-            <div className="absolute inset-0 opacity-20 pointer-events-none z-0" style={{ backgroundImage: 'radial-gradient(#ffffff 1px, transparent 1px)', backgroundSize: '20px 20px' }}></div>
+        const result: TileData[] = [];
+        let currentVal = uniqueNonJokers[0].value;
+        result.push(uniqueNonJokers[0]);
 
-            <div className="absolute top-1/2 left-0 transform -translate-y-1/2 z-20 flex flex-col gap-6 items-start">
-                  {!isReordering && (
-                      <>
-                          <button
-                              onClick={(e) => { e.stopPropagation(); onResetGame(); }}
-                              className="w-12 py-8 rounded-r-xl shadow-lg font-bold text-xs tracking-widest bg-gray-800 text-white border-l-0 border border-gray-600 hover:translate-x-1 transition-transform flex items-center justify-center"
-                          >
-                              <span className="[writing-mode:vertical-rl] rotate-180 whitespace-nowrap">NEW GAME</span>
-                          </button>
-                          
-                          <button
-                              onClick={(e) => { e.stopPropagation(); onToggleAutoPlay(); }}
-                              className={clsx(
-                                  "w-12 py-6 rounded-r-xl shadow-lg font-bold text-xs tracking-widest border-l-0 hover:translate-x-1 transition-transform flex items-center justify-center",
-                                  isAutoPlaying 
-                                      ? "bg-yellow-500 text-black border-yellow-400 animate-pulse" 
-                                      : "bg-green-700 text-white border-green-600"
-                              )}
-                          >
-                              <span className="[writing-mode:vertical-rl] rotate-180 whitespace-nowrap">
-                                  {isAutoPlaying ? "THINKING..." : "AUTO PLAY"}
-                              </span>
-                          </button>
-                      </>
-                  )}
-            </div>
-
-            <div className="absolute top-1/2 right-0 transform -translate-y-1/2 z-20 flex flex-col gap-12 items-end">
-                <div className="flex flex-col gap-2">
-                  {isReordering && (
-                      <button
-                          onClick={(e) => { e.stopPropagation(); onResetBoard(); }}
-                          className="w-12 py-6 rounded-l-xl shadow-lg font-bold text-xs tracking-widest bg-yellow-600 text-white hover:-translate-x-1 transition-transform flex items-center justify-center"
-                      >
-                          <span className="[writing-mode:vertical-rl] whitespace-nowrap">RESET</span>
-                      </button>
-                  )}
-                  <button 
-                      onClick={(e) => { e.stopPropagation(); onToggleReorder(); }}
-                      className={clsx(
-                          "w-12 py-6 rounded-l-xl shadow-lg font-bold text-xs tracking-widest hover:-translate-x-1 transition-transform flex items-center justify-center",
-                          isReordering 
-                              ? (allSetsValid ? "bg-green-600 text-white" : "bg-red-600 text-white animate-pulse")
-                              : "bg-blue-600 text-white"
-                      )}
-                  >
-                      <span className="[writing-mode:vertical-rl] whitespace-nowrap">{isReordering ? "DONE" : "REORDER"}</span>
-                  </button>
-                  <button
-                      onClick={(e) => { e.stopPropagation(); onCycleRotate(); }}
-                      className="w-12 py-6 rounded-l-xl shadow-lg font-bold text-xs tracking-widest bg-indigo-600 text-white hover:-translate-x-1 transition-transform flex items-center justify-center"
-                  >
-                      <span className="[writing-mode:vertical-rl] whitespace-nowrap">ROTATE</span>
-                  </button>
-                </div>
-
-                <div className="flex flex-col gap-2">
-                   <button
-                      onClick={(e) => { e.stopPropagation(); onCompactBoard(); }}
-                      className="w-12 py-6 rounded-l-xl shadow-lg font-bold text-xs tracking-widest bg-yellow-500 text-black hover:-translate-x-1 transition-transform flex items-center justify-center"
-                  >
-                      <span className="[writing-mode:vertical-rl] whitespace-nowrap">COMPACT</span>
-                  </button>
-                  <button
-                      onClick={(e) => { e.stopPropagation(); onToggleSplit(); }}
-                      className={clsx(
-                          "w-12 py-6 rounded-l-xl shadow-lg font-bold text-xs tracking-widest hover:-translate-x-1 transition-transform flex items-center justify-center",
-                          isSplitting 
-                              ? "bg-green-500 text-white ring-2 ring-white" 
-                              : "bg-green-600 text-white"
-                      )}
-                  >
-                      <span className="[writing-mode:vertical-rl] whitespace-nowrap">SPLIT</span>
-                  </button>
-                </div>
-            </div>
-
-            <div 
-              id="game-board" 
-              className="absolute left-1/2 top-1/2 w-0 h-0 overflow-visible z-10 transition-transform duration-500 ease-out"
-              style={{ transform: `scale(${boardScale})` }}
-            >
-              {sets.map((set) => {
-                  const isValid = isValidSet(set.tiles);
-                  const baseRotation = set.orientation === 'TOP' ? 180 : 0;
-                  const randomRotation = set.rotation || 0;
-                  const x = set.x || 0;
-                  const y = set.y || 0;
-                  
-                  return (
-                    <div 
-                      key={set.id}
-                      data-set-id={set.id}
-                      onPointerUp={(e) => onSetClick(e, set.id)}
-                      onPointerDown={(e) => {
-                         if (!isReordering && !isSplitting && !hasSelectedTiles) {
-                             onSetDragStart(e, set.id);
-                         }
-                      }}
-                      style={{
-                          transform: `translate(-50%, -50%) translate(${x}px, ${y}px) rotate(${baseRotation + randomRotation}deg)`,
-                          position: 'absolute',
-                          left: 0,
-                          top: 0
-                      }}
-                      className={clsx(
-                        "bg-black/10 rounded-xl p-3 flex gap-1 transition-colors duration-200 border-2 items-center min-w-max",
-                        isReordering 
-                          ? (isValid ? "border-white/50 border-dashed" : "border-red-500 bg-red-900/20 border-dashed") 
-                          : (!hasSelectedTiles && !isSplitting ? "border-transparent hover:bg-white/5 cursor-move" : "border-transparent hover:bg-white/5"),
-                        isSplitting && set.tiles.length >= 6 ? "cursor-crosshair hover:bg-green-900/30 border-green-500/50 border-dashed" : ""
-                      )}
-                    >
-                      {isReordering && (
-                          <>
-                              <div 
-                                  onPointerDown={(e) => onSetDragStart(e, set.id)}
-                                  className="absolute -top-10 left-1/2 -translate-x-[120%] w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center shadow-lg cursor-move active:scale-95 transition-transform z-30"
-                              >
-                                  <Move size={20} className="text-white" />
-                              </div>
-                              <div 
-                                  onPointerDown={(e) => { e.stopPropagation(); onSetRotate(set.id); }}
-                                  className="absolute -top-10 left-1/2 translate-x-[20%] w-10 h-10 bg-yellow-600 rounded-full flex items-center justify-center shadow-lg cursor-pointer active:scale-95 transition-transform z-30"
-                              >
-                                  <RotateCcw size={20} className="text-white" />
-                              </div>
-                          </>
-                      )}
-
-                      {set.tiles.map((tile) => (
-                        <div 
-                          key={tile.id}
-                          onPointerDown={(e) => {
-                              if (isReordering) {
-                                  onDragStart(e, tile, set.id);
-                              }
-                          }}
-                          className={clsx(isReordering ? "cursor-grab active:cursor-grabbing" : "")}
-                        >
-                            <Tile 
-                              tile={tile} 
-                              size="md"
-                              isDragging={draggedTileIds.includes(tile.id)}
-                            />
-                        </div>
-                      ))}
-                    </div>
-                  );
-              })}
-            </div>
-          </div>
-        );
-      };
-
-      // --- APP COMPONENT ---
-
-      const DEFAULT_STATE = {
-          gamePhase: 'SETUP',
-          deck: [],
-          board: [],
-          boardSnapshot: null,
-          rackSnapshots: null,
-          playerTopHand: [],
-          playerBottomHand: [],
-          playerTopSort: 'RUN', 
-          playerBottomSort: 'RUN', 
-          selectedTileIds: { TOP: [], BOTTOM: [] },
-          activePlayer: null,
-          interactionMode: 'IDLE',
-          activeDrags: {},
-          setupState: {
-              topCard: null,
-              bottomCard: null
-          },
-          lastDrawnTileId: {
-              TOP: null,
-              BOTTOM: null
-          }
-      };
-
-      const App = () => {
-        const [gameState, setGameState] = useState(() => {
-            const saved = localStorage.getItem('rummikub_state');
-            if (saved) {
-                try {
-                    const parsed = JSON.parse(saved);
-                    if (parsed.board) {
-                        parsed.board = parsed.board.map((s) => ({
-                            ...s,
-                            x: s.x ?? 0,
-                            y: s.y ?? 0,
-                            createdBy: s.createdBy ?? s.orientation
-                        }));
-                    }
-                    ['playerTopHand', 'playerBottomHand'].forEach(key => {
-                        if (parsed[key]) {
-                            parsed[key] = sortHand(parsed[key], 'RUN'); 
-                        }
-                    });
-                    if (Array.isArray(parsed.selectedTileIds)) {
-                        parsed.selectedTileIds = { TOP: [], BOTTOM: [] };
-                    }
-                    if (parsed.dragState) {
-                        parsed.activeDrags = {};
-                        delete parsed.dragState;
-                    }
-                    return parsed;
-                } catch (e) {
-                    console.error("Failed to load state", e);
+        for (let i = 1; i < uniqueNonJokers.length; i++) {
+            const nextTile = uniqueNonJokers[i];
+            const gap = nextTile.value - currentVal - 1;
+            for (let k = 0; k < gap; k++) {
+                if (jokers.length > 0) {
+                    result.push(jokers.pop()!);
+                    currentVal++;
                 }
             }
-            return DEFAULT_STATE;
+            result.push(nextTile);
+            currentVal = nextTile.value;
+        }
+
+        while (jokers.length > 0) {
+            if (currentVal < MAX_VALUE) {
+                result.push(jokers.pop()!);
+                currentVal++;
+            } else {
+                result.unshift(jokers.pop()!);
+            }
+        }
+        const skipped = nonJokers.filter(t => !uniqueNonJokers.includes(t));
+        result.push(...skipped);
+        return result;
+    };
+
+    const isValidSet = (tiles: TileData[]): boolean => {
+      if (tiles.length < 3) return false;
+      const jokers = tiles.filter(t => t.isJoker);
+      const nonJokers = tiles.filter(t => !t.isJoker);
+
+      const isGroup = (): boolean => {
+        if (tiles.length > 4) return false; 
+        if (nonJokers.length === 0) return true; 
+        const targetValue = nonJokers[0].value;
+        const seenColors = new Set<TileColor>();
+        for (const tile of nonJokers) {
+          if (tile.value !== targetValue) return false;
+          if (tile.color && seenColors.has(tile.color)) return false;
+          if (tile.color) seenColors.add(tile.color);
+        }
+        return true;
+      };
+
+      const isRun = (): boolean => {
+         if (tiles.length > 13) return false;
+         if (nonJokers.length === 0) return true;
+         const targetColor = nonJokers[0].color;
+         if (!nonJokers.every(t => t.color === targetColor)) return false;
+         const sortedNonJokers = [...nonJokers].sort((a, b) => a.value - b.value);
+         let jokersAvailable = jokers.length;
+         
+         for (let i = 0; i < sortedNonJokers.length - 1; i++) {
+            const current = sortedNonJokers[i].value;
+            const next = sortedNonJokers[i+1].value;
+            if (current === next) return false; 
+            const gap = next - current - 1; 
+            if (gap > 0) {
+                if (jokersAvailable >= gap) {
+                    jokersAvailable -= gap;
+                } else {
+                    return false; 
+                }
+            }
+         }
+         return true;
+      };
+      return isGroup() || isRun();
+    };
+
+    const validateMove = (existingTiles: TileData[], newTiles: TileData[]): TileData[] | null => {
+        const combined = [...existingTiles, ...newTiles];
+        return autoSortSet(combined);
+    }
+
+    const autoSortSet = (tiles: TileData[], requireValid: boolean = true): TileData[] | null => {
+        const seen = new Set<string>();
+        const uniqueTiles: TileData[] = [];
+        for (const t of tiles) {
+            if (!seen.has(t.id)) {
+                seen.add(t.id);
+                uniqueTiles.push(t);
+            }
+        }
+
+        const runSorted = sortTiles(uniqueTiles, 'RUN');
+        if (isValidSet(runSorted)) {
+            return organizeRun(uniqueTiles);
+        }
+
+        const groupSorted = sortTiles(uniqueTiles, 'GROUP');
+        if (isValidSet(groupSorted)) return groupSorted;
+
+        if (requireValid) return null;
+        
+        const colors = uniqueTiles.map(t => t.color).filter(c => c !== null);
+        const mostCommonColor = colors.sort((a,b) => colors.filter(v => v===a).length - colors.filter(v => v===b).length).pop();
+        const sameColorCount = uniqueTiles.filter(t => t.color === mostCommonColor).length;
+
+        if (sameColorCount > uniqueTiles.length / 2) {
+            return runSorted;
+        }
+        return groupSorted;
+    };
+
+    const validateBoard = (board: BoardSet[]): boolean => {
+        return board.every(set => isValidSet(set.tiles));
+    };
+
+    const getSetDimensions = (tileCount: number) => {
+        const tileWidth = 48;
+        const gap = 1; 
+        const padding = 2; 
+        const width = (tileCount * tileWidth) + ((tileCount - 1) * gap) + padding;
+        const height = 80; 
+        return { width, height };
+    };
+
+    const doRectsIntersect = (r1, r2) => {
+        return !(r2.x - r2.w/2 > r1.x + r1.w/2 || 
+                 r2.x + r2.w/2 < r1.x - r1.w/2 || 
+                 r2.y - r2.h/2 > r1.y + r1.h/2 || 
+                 r2.y + r2.h/2 < r1.y - r1.h/2);
+    };
+
+    const findFreePosition = (existingSets: BoardSet[], tileCount: number): {x:number, y:number} => {
+        const { width, height } = getSetDimensions(tileCount);
+        const buffer = 2; 
+        const newRect = { x: 0, y: 0, w: width + buffer, h: height + buffer };
+        const a = 5; 
+        let angle = 0;
+        const step = 0.1; 
+        let i = 0;
+
+        while (i < 5000) {
+            const radius = a * angle;
+            newRect.x = i === 0 ? 0 : radius * Math.cos(angle);
+            newRect.y = i === 0 ? 0 : radius * Math.sin(angle);
+            const hasCollision = existingSets.some(set => {
+                const dim = getSetDimensions(set.tiles.length);
+                return doRectsIntersect(newRect, { 
+                    x: set.x, 
+                    y: set.y, 
+                    w: dim.width + buffer, 
+                    h: dim.height + buffer 
+                });
+            });
+            if (!hasCollision) return { x: newRect.x, y: newRect.y };
+            angle += step;
+            i++;
+        }
+        return { x: 0, y: 0 };
+    };
+
+    const compactBoardLogic = (sets: BoardSet[]): BoardSet[] => {
+        const sortedSets = [...sets].sort((a, b) => {
+            const distA = Math.hypot(a.x, a.y);
+            const distB = Math.hypot(b.x, b.y);
+            return distA - distB;
         });
 
-        const [showNewGameModal, setShowNewGameModal] = useState(false);
-        const [isAutoPlaying, setIsAutoPlaying] = useState(false);
-        const dragOffsetsRef = useRef({});
-        const gameStateRef = useRef(gameState);
-        const aiStateRef = useRef({ processing: false });
+        const compactedSets: BoardSet[] = [];
+        
+        for (const set of sortedSets) {
+            const { width, height } = getSetDimensions(set.tiles.length);
+            const buffer = 2;
+            const setRect = { x: 0, y: 0, w: width + buffer, h: height + buffer };
+            const angle = Math.atan2(set.y, set.x);
+            const maxDist = Math.hypot(set.x, set.y);
+            let validX = set.x;
+            let validY = set.y;
+            const rayStep = 5;
+            
+            for (let r = 0; r <= maxDist; r += rayStep) {
+                 setRect.x = r * Math.cos(angle);
+                 setRect.y = r * Math.sin(angle);
+                 const collision = compactedSets.some(placedSet => {
+                     const dim = getSetDimensions(placedSet.tiles.length);
+                     return doRectsIntersect(setRect, {
+                         x: placedSet.x,
+                         y: placedSet.y,
+                         w: dim.width + buffer,
+                         h: dim.height + buffer
+                     });
+                 });
+                 if (!collision) {
+                     validX = setRect.x;
+                     validY = setRect.y;
+                     break;
+                 }
+            }
+            compactedSets.push({ ...set, x: validX, y: validY });
+        }
+        return compactedSets;
+    };
 
-        useEffect(() => {
-            localStorage.setItem('rummikub_state', JSON.stringify(gameState));
-        }, [gameState]);
+    // --- UTILS: AI LOGIC ---
+    
+    type AIMoveType = 'ADD_TO_SET' | 'PLAY_NEW_SET' | 'DRAW' | 'SWAP_JOKER' | 'STEAL_TILE' | 'SPLIT_SET';
 
-        useEffect(() => {
-            gameStateRef.current = gameState;
-        }, [gameState]);
+    interface AIMove {
+        type: AIMoveType;
+        tiles: TileData[];
+        targetSetId?: string; 
+        targetPos?: { x: number, y: number };
+        jokerId?: string;
+        sourceSetId?: string;
+        stolenTileId?: string;
+        remainderSplit?: boolean; 
+        splitSetId?: string;
+        newSet1?: TileData[];
+        newSet2?: TileData[];
+    }
 
-        useEffect(() => {
-          if (gameState.deck.length === 0 && gameState.gamePhase === 'SETUP' && !gameState.setupState.topCard) {
-              const deck = generateDeck();
-              setGameState(prev => ({ ...prev, deck }));
-          }
-        }, []); 
+    const getJokerIdentity = (set: TileData[], jokerId: string) => {
+        const nonJokers = set.filter(t => !t.isJoker);
+        if (nonJokers.length === 0) return null; 
+        const sorted = sortTiles(nonJokers, 'RUN');
+        const isSameColor = sorted.every(t => t.color === sorted[0].color);
+        if (isSameColor) {
+            const jokerIndex = set.findIndex(t => t.id === jokerId);
+            const prev = set[jokerIndex - 1];
+            const next = set[jokerIndex + 1];
+            if (prev && !prev.isJoker) return { value: prev.value + 1, color: prev.color };
+            if (next && !next.isJoker) return { value: next.value - 1, color: next.color };
+        }
+        const firstVal = nonJokers[0].value;
+        if (nonJokers.every(t => t.value === firstVal)) {
+            return { value: firstVal, color: null };
+        }
+        return null;
+    };
 
-        const commitDrop = (
-            tileId, tileData, sourceSetId, targetRackId, targetSlotX, targetSlotY, targetSetId, targetPosOverride, specificCreatedSetId, bypassValidation = false
-          ) => {
-          setGameState(prev => {
-              if (sourceSetId && sourceSetId.startsWith('RACK_')) {
-                  const isTop = sourceSetId === 'RACK_TOP';
-                  const hand = isTop ? prev.playerTopHand : prev.playerBottomHand;
-                  if (!hand.some(t => t.id === tileId)) return prev;
-              } else if (sourceSetId) {
-                  const set = prev.board.find(s => s.id === sourceSetId);
-                  if (!set || !set.tiles.some(t => t.id === tileId)) return prev;
-              }
+    const calculateNextAIMove = (hand: TileData[], board: BoardSet[]): AIMove | null => {
+        const jokersInHand = hand.filter(t => t.isJoker);
+        const nonJokersInHand = hand.filter(t => !t.isJoker);
 
-              if (targetRackId) {
-                   const isTop = targetRackId === 'TOP';
-                   const currentHand = isTop ? [...prev.playerTopHand] : [...prev.playerBottomHand];
-                   let updatedHand = currentHand.filter(t => t.id !== tileId);
-                   
-                   let newX = 0, newY = 0;
-                   if (targetSlotX !== undefined && targetSlotY !== undefined) {
-                       newX = targetSlotX; newY = targetSlotY;
-                   } else {
-                       const pos = findFreeRackSlot(updatedHand);
-                       newX = pos.x; newY = pos.y;
-                   }
-
-                   const existingOccupantIndex = updatedHand.findIndex(t => t.rackX === newX && t.rackY === newY);
-                   const tileToPlace = { ...tileData, rackX: newX, rackY: newY };
-                   
-                   if (existingOccupantIndex !== -1) {
-                       const occupant = updatedHand[existingOccupantIndex];
-                       updatedHand.splice(existingOccupantIndex, 1);
-                       const occupiedSet = new Set();
-                       occupiedSet.add(`${newX},${newY}`);
-                       updatedHand.forEach(t => occupiedSet.add(`${t.rackX},${t.rackY}`));
-                       let freeX = 0, freeY = 0;
-                       const dynCols = Math.max(10, Math.ceil(updatedHand.length / (updatedHand.length > 20 ? 3 : 2)));
-
-                       outerLoop: for(let r=0; r<3; r++) { 
-                           for(let c=0; c<dynCols+2; c++) {
-                               if (!occupiedSet.has(`${c},${r}`)) {
-                                   freeX = c; freeY = r;
-                                   break outerLoop;
-                               }
-                           }
-                       }
-                       occupant.rackX = freeX; occupant.rackY = freeY;
-                       updatedHand.push(occupant);
-                       updatedHand.push(tileToPlace);
-                   } else {
-                       updatedHand.push(tileToPlace);
-                   }
-
-                   let newBoard = [...prev.board];
-                   let removedFromBoard = false;
-                   if (sourceSetId && sourceSetId.indexOf('RACK') === -1) {
-                       const setIndex = newBoard.findIndex(s => s.id === sourceSetId);
-                       if (setIndex !== -1) {
-                           const originalLength = newBoard[setIndex].tiles.length;
-                           const setTiles = newBoard[setIndex].tiles.filter(t => t.id !== tileId);
-                           if (setTiles.length < originalLength) {
-                               removedFromBoard = true;
-                               if (setTiles.length === 0) {
-                                   newBoard.splice(setIndex, 1);
-                               } else {
-                                   newBoard[setIndex] = { ...newBoard[setIndex], tiles: setTiles };
-                               }
-                           }
-                       }
-                   }
-                   
-                   if (sourceSetId && sourceSetId.indexOf('RACK') === -1 && !removedFromBoard) return prev;
-
-                   return {
-                       ...prev,
-                       board: newBoard,
-                       playerTopHand: isTop ? updatedHand : prev.playerTopHand,
-                       playerBottomHand: !isTop ? updatedHand : prev.playerBottomHand,
-                       lastDrawnTileId: { ...prev.lastDrawnTileId, [isTop ? 'TOP' : 'BOTTOM']: null }
-                   };
-              }
-
-              let newBoard = [...prev.board];
-              let newTopHand = [...prev.playerTopHand];
-              let newBottomHand = [...prev.playerBottomHand];
-              let sourceWasRack = false;
-              let tileFound = false;
-              
-              if (sourceSetId && sourceSetId.startsWith('RACK_')) {
-                  sourceWasRack = true;
-                  const isTop = sourceSetId === 'RACK_TOP';
-                  if (isTop) {
-                      if (newTopHand.some(t => t.id === tileId)) {
-                          newTopHand = newTopHand.filter(t => t.id !== tileId);
-                          tileFound = true;
-                      }
-                  } else {
-                      if (newBottomHand.some(t => t.id === tileId)) {
-                          newBottomHand = newBottomHand.filter(t => t.id !== tileId);
-                          tileFound = true;
-                      }
-                  }
-              } else if (sourceSetId) {
-                  const sourceSetIndex = newBoard.findIndex(s => s.id === sourceSetId);
-                  if (sourceSetIndex !== -1) {
-                      let sourceTiles = [...newBoard[sourceSetIndex].tiles];
-                      if (sourceTiles.some(t => t.id === tileId)) {
-                          sourceTiles = sourceTiles.filter(t => t.id !== tileId);
-                          tileFound = true;
-                          if (sourceTiles.length === 0) {
-                              newBoard.splice(sourceSetIndex, 1);
-                          } else {
-                              newBoard[sourceSetIndex] = { ...newBoard[sourceSetIndex], tiles: sourceTiles };
-                          }
-                      }
-                  }
-              }
-
-              if (sourceSetId && !tileFound) return prev;
-
-              if (targetSetId) {
-                  const targetIndex = newBoard.findIndex(s => s.id === targetSetId);
-                  if (targetIndex !== -1) {
-                      let targetTiles = [...newBoard[targetIndex].tiles, tileData];
-                      const strictMode = !bypassValidation && prev.interactionMode !== 'REORDER_BOARD';
-                      const sorted = autoSortSet(targetTiles, strictMode); 
-                      
-                      if (sorted) {
-                           newBoard[targetIndex] = { ...newBoard[targetIndex], tiles: sorted };
-                      } else {
-                          if (strictMode) return prev;
-                          newBoard[targetIndex] = { ...newBoard[targetIndex], tiles: targetTiles };
-                      }
-                  }
-              } else {
-                  let dropX = 0, dropY = 0;
-                  if (targetPosOverride) {
-                      dropX = targetPosOverride.x;
-                      dropY = targetPosOverride.y;
-                  }
-                  let orientation = 'BOTTOM';
-                  if (sourceWasRack) {
-                      orientation = sourceSetId === 'RACK_TOP' ? 'TOP' : 'BOTTOM';
-                  }
-
-                  const setId = specificCreatedSetId || uuidv4();
-                  const existingIndex = newBoard.findIndex(s => s.id === setId);
-                  
-                  if (existingIndex !== -1) {
-                       const currentTiles = newBoard[existingIndex].tiles;
-                       const strictMode = !bypassValidation && prev.interactionMode !== 'REORDER_BOARD';
-                       const sorted = autoSortSet([...currentTiles, tileData], strictMode); 
-                       if (sorted) {
-                           newBoard[existingIndex] = { ...newBoard[existingIndex], tiles: sorted };
-                       } else if (strictMode) {
-                           return prev;
-                       } else {
-                           newBoard[existingIndex] = { ...newBoard[existingIndex], tiles: [...currentTiles, tileData] };
-                       }
-                  } else {
-                      newBoard.push({ 
-                          id: setId, 
-                          tiles: [tileData], 
-                          orientation: orientation,
-                          createdBy: orientation,
-                          rotation: (Math.random() * 4) - 2,
-                          x: dropX,
-                          y: dropY
-                      });
-                  }
-              }
-
-              return {
-                  ...prev,
-                  board: newBoard,
-                  playerTopHand: newTopHand,
-                  playerBottomHand: newBottomHand,
-              };
-          });
-        };
-
-        const runAITurn = async () => {
-            if (aiStateRef.current.processing) return;
-            aiStateRef.current.processing = true;
-
-            const animateTile = async (tileId, startSel, endX, endY, tileData) => {
-               const AI_POINTER_ID = 999;
-               const startEl = document.querySelector(startSel);
-               let startX = 0, startY = 0;
-               
-               if (startEl) {
-                   const rect = startEl.getBoundingClientRect();
-                   startX = rect.left + rect.width/2;
-                   startY = rect.top + rect.height/2;
-               }
-
-               dragOffsetsRef.current[AI_POINTER_ID] = { x: 0, y: 0 };
-               setGameState(prev => ({
-                   ...prev,
-                   activeDrags: {
-                       ...prev.activeDrags,
-                       [AI_POINTER_ID]: {
-                           isDragging: true, tileId, sourceSetId: 'RACK_TOP', x: startX, y: startY, startX, startY, tileData, draggingSetId: null, initialSetPos: null
-                       }
-                   }
-               }));
-
-               const duration = 500;
-               const start = performance.now();
-               
-               await new Promise(resolve => {
-                   const animate = (time) => {
-                       const p = Math.min((time - start) / duration, 1);
-                       const ease = p * (2 - p);
-                       const curX = startX + (endX - startX) * ease;
-                       const curY = startY + (endY - startY) * ease;
-                       setGameState(prev => ({
-                           ...prev,
-                           activeDrags: {
-                               ...prev.activeDrags,
-                               [AI_POINTER_ID]: { ...(prev.activeDrags[AI_POINTER_ID]), x: curX, y: curY }
-                           }
-                       }));
-                       if (p < 1) requestAnimationFrame(animate); else resolve();
-                   };
-                   requestAnimationFrame(animate);
-               });
-               
-               setGameState(prev => {
-                   const next = { ...prev };
-                   delete next.activeDrags[AI_POINTER_ID];
-                   return next;
-               });
-            };
-
-            const performMove = async (move) => {
-                if (move.type === 'ADD_TO_SET' && move.targetSetId) {
-                   for (const tile of move.tiles) {
-                       const setEl = document.querySelector(`[data-set-id="${move.targetSetId}"]`);
-                       let endX = 0, endY = 0;
-                       if (setEl) {
-                           const rect = setEl.getBoundingClientRect();
-                           endX = rect.left + rect.width/2; endY = rect.top + rect.height/2;
-                       }
-                       await animateTile(tile.id, `[data-tile-id="${tile.id}"]`, endX, endY, tile);
-                       commitDrop(tile.id, tile, 'RACK_TOP', undefined, undefined, undefined, move.targetSetId, undefined, undefined, true);
-                       await new Promise(r => setTimeout(r, 200));
-                   }
+        for (const set of board) {
+            const joker = set.tiles.find(t => t.isJoker);
+            if (joker) {
+                const identity = getJokerIdentity(set.tiles, joker.id);
+                if (identity) {
+                    const match = hand.find(t => 
+                        !t.isJoker && 
+                        t.value === identity.value && 
+                        (identity.color === null ? !set.tiles.some(st => !st.isJoker && st.color === t.color) : t.color === identity.color)
+                    );
+                    if (match) return { type: 'SWAP_JOKER', tiles: [match], targetSetId: set.id, jokerId: joker.id };
                 }
-                else if (move.type === 'PLAY_NEW_SET' && move.targetPos) {
-                    const createdSetId = uuidv4();
-                    const boardEl = document.getElementById('game-board-container');
-                    let baseX = 0, baseY = 0;
-                    if (boardEl) {
-                       const rect = boardEl.getBoundingClientRect();
-                       baseX = rect.left + rect.width / 2; baseY = rect.top + rect.height / 2;
-                    }
-                    for (let i = 0; i < move.tiles.length; i++) {
-                       const tile = move.tiles[i];
-                       let endX = baseX + move.targetPos.x;
-                       let endY = baseY + move.targetPos.y;
-                       if (i > 0) {
-                           const setEl = document.querySelector(`[data-set-id="${createdSetId}"]`);
-                           if (setEl) {
-                               const rect = setEl.getBoundingClientRect();
-                               endX = rect.left + rect.width/2; endY = rect.top + rect.height/2;
-                           }
-                       }
-                       await animateTile(tile.id, `[data-tile-id="${tile.id}"]`, endX, endY, tile);
-                       if (i === 0) commitDrop(tile.id, tile, 'RACK_TOP', undefined, undefined, undefined, undefined, move.targetPos, createdSetId, true);
-                       else commitDrop(tile.id, tile, 'RACK_TOP', undefined, undefined, undefined, createdSetId, undefined, undefined, true);
-                       await new Promise(r => setTimeout(r, 200));
-                    }
-                }
-                else if (move.type === 'SWAP_JOKER' && move.targetSetId && move.jokerId) {
-                    const tile = move.tiles[0];
-                    const setEl = document.querySelector(`[data-set-id="${move.targetSetId}"]`);
-                    let endX = 0, endY = 0;
-                    if (setEl) {
-                           const rect = setEl.getBoundingClientRect();
-                           endX = rect.left + rect.width/2; endY = rect.top + rect.height/2;
-                    }
-                    await animateTile(tile.id, `[data-tile-id="${tile.id}"]`, endX, endY, tile);
-                    setGameState(prev => {
-                        const setIndex = prev.board.findIndex(s => s.id === move.targetSetId);
-                        if (setIndex === -1) return prev;
-                        const targetSet = prev.board[setIndex];
-                        const jokerData = targetSet.tiles.find(t => t.id === move.jokerId);
-                        if (!jokerData) return prev; 
-                        let newTiles = targetSet.tiles.filter(t => t.id !== move.jokerId);
-                        newTiles.push(tile);
-                        const sorted = autoSortSet(newTiles);
-                        const newBoard = [...prev.board];
-                        newBoard[setIndex] = { ...targetSet, tiles: sorted || newTiles };
-                        const newHand = prev.playerTopHand.filter(t => t.id !== tile.id);
-                        const pos = findFreeRackSlot(newHand);
-                        const jokerInHand = { ...jokerData, rackX: pos.x, rackY: pos.y };
-                        newHand.push(jokerInHand);
-                        return { ...prev, board: newBoard, playerTopHand: newHand, lastDrawnTileId: { ...prev.lastDrawnTileId, TOP: null } };
-                    });
-                    await new Promise(r => setTimeout(r, 500));
-                }
-                else if (move.type === 'SPLIT_SET' && move.splitSetId && move.newSet1 && move.newSet2) {
-                    const tile = move.tiles[0];
-                    const setEl = document.querySelector(`[data-set-id="${move.splitSetId}"]`);
-                    let endX = 0, endY = 0;
-                    if (setEl) {
-                        const rect = setEl.getBoundingClientRect();
-                        endX = rect.left + rect.width / 2; endY = rect.top + rect.height / 2;
-                    }
-                    await animateTile(tile.id, `[data-tile-id="${tile.id}"]`, endX, endY, tile);
-                    setGameState(prev => {
-                        const newBoard = [...prev.board];
-                        const setIndex = newBoard.findIndex(s => s.id === move.splitSetId);
-                        if (setIndex === -1) return prev;
-                        const originalSet = newBoard[setIndex];
-                        const { width: w1 } = getSetDimensions(move.newSet1.length);
-                        const { width: w2 } = getSetDimensions(move.newSet2.length);
-                        const gap = 20;
-                        const totalW = w1 + gap + w2;
-                        const x1 = originalSet.x - (totalW / 2) + (w1 / 2);
-                        const x2 = x1 + (w1 / 2) + gap + (w2 / 2);
-                        const set1 = { ...originalSet, id: uuidv4(), tiles: move.newSet1, x: x1 };
-                        const set2 = { ...originalSet, id: uuidv4(), tiles: move.newSet2, x: x2 };
-                        newBoard.splice(setIndex, 1, set1, set2);
-                        const newHand = prev.playerTopHand.filter(t => t.id !== tile.id);
-                        return { ...prev, board: newBoard, playerTopHand: newHand, lastDrawnTileId: { ...prev.lastDrawnTileId, TOP: null } };
-                    });
-                    await new Promise(r => setTimeout(r, 500));
-                }
-                else if (move.type === 'STEAL_TILE' && move.sourceSetId && move.stolenTileId && move.targetPos) {
-                    const createdSetId = uuidv4();
-                    const handTiles = move.tiles.filter(t => t.id !== move.stolenTileId);
-                    const boardEl = document.getElementById('game-board-container');
-                    let baseX = 0, baseY = 0;
-                    if (boardEl) {
-                       const rect = boardEl.getBoundingClientRect();
-                       baseX = rect.left + rect.width / 2; baseY = rect.top + rect.height / 2;
-                    }
-                    const endX = baseX + move.targetPos.x;
-                    const endY = baseY + move.targetPos.y;
+            }
+        }
 
-                    for (const tile of handTiles) {
-                        await animateTile(tile.id, `[data-tile-id="${tile.id}"]`, endX, endY, tile);
-                    }
-                    const stolenTile = move.tiles.find(t => t.id === move.stolenTileId);
-                    await animateTile(stolenTile.id, `[data-tile-id="${stolenTile.id}"]`, endX, endY, stolenTile);
+        for (const tile of hand) {
+            for (const set of board) {
+                if (validateMove(set.tiles, [tile])) {
+                    return { type: 'ADD_TO_SET', tiles: [tile], targetSetId: set.id };
+                }
+            }
+        }
 
-                    setGameState(prev => {
-                        const newBoard = [...prev.board];
-                        const sourceIndex = newBoard.findIndex(s => s.id === move.sourceSetId);
-                        if (sourceIndex === -1) return prev;
-                        const sourceSet = newBoard[sourceIndex];
-                        
-                        if (move.remainderSplit) {
-                            const splitIdx = sourceSet.tiles.findIndex(t => t.id === move.stolenTileId);
-                            const leftTiles = sourceSet.tiles.slice(0, splitIdx);
-                            const rightTiles = sourceSet.tiles.slice(splitIdx + 1);
-                            newBoard[sourceIndex] = { ...sourceSet, tiles: leftTiles };
-                            newBoard.push({ ...sourceSet, id: uuidv4(), tiles: rightTiles, x: sourceSet.x + 60 });
-                        } else {
-                            const newSourceTiles = sourceSet.tiles.filter(t => t.id !== move.stolenTileId);
-                            if (newSourceTiles.length === 0) newBoard.splice(sourceIndex, 1);
-                            else newBoard[sourceIndex] = { ...sourceSet, tiles: newSourceTiles };
+        const byValue: Record<number, TileData[]> = {};
+        nonJokersInHand.forEach(t => {
+            if (!byValue[t.value]) byValue[t.value] = [];
+            byValue[t.value].push(t);
+        });
+
+        for (const valStr in byValue) {
+            const group = byValue[valStr];
+            const needed = 3 - group.length;
+            if (needed <= jokersInHand.length) {
+                const candidate = [...group, ...jokersInHand.slice(0, Math.max(0, needed))];
+                if (candidate.length < 3) {
+                     const moreJokers = jokersInHand.slice(Math.max(0, needed), 4 - group.length);
+                     candidate.push(...moreJokers);
+                }
+                if (candidate.length >= 3) {
+                     const sortedCandidate = autoSortSet(candidate);
+                     if (sortedCandidate) {
+                         const pos = findFreePosition(board, sortedCandidate.length);
+                         return { type: 'PLAY_NEW_SET', tiles: sortedCandidate, targetPos: pos };
+                     }
+                }
+            }
+        }
+
+        const byColor: Record<string, TileData[]> = {};
+        nonJokersInHand.forEach(t => {
+            if (t.color) {
+                if (!byColor[t.color]) byColor[t.color] = [];
+                byColor[t.color].push(t);
+            }
+        });
+
+        for (const color in byColor) {
+            const tiles = byColor[color].sort((a,b) => a.value - b.value);
+            for (let i = 0; i < tiles.length; i++) {
+                let currentRun = [tiles[i]];
+                let jokersUsed = 0;
+                let lastVal = tiles[i].value;
+                for (let j = i + 1; j < tiles.length; j++) {
+                    const diff = tiles[j].value - lastVal;
+                    const needed = diff - 1;
+                    if (diff === 0) continue; 
+                    if (jokersInHand.length - jokersUsed >= needed) {
+                        for(let k=0; k<needed; k++) currentRun.push(jokersInHand[jokersUsed + k]);
+                        jokersUsed += needed;
+                        currentRun.push(tiles[j]);
+                        lastVal = tiles[j].value;
+                        if (currentRun.length >= 3) {
+                            const sortedRun = autoSortSet(currentRun);
+                            if (sortedRun) {
+                                 const pos = findFreePosition(board, sortedRun.length);
+                                 return { type: 'PLAY_NEW_SET', tiles: sortedRun, targetPos: pos };
+                            }
                         }
-                        newBoard.push({
-                            id: createdSetId,
-                            tiles: move.tiles, 
-                            orientation: 'TOP', createdBy: 'TOP',
-                            rotation: (Math.random() * 4) - 2,
-                            x: move.targetPos.x, y: move.targetPos.y
-                        });
-                        const handIdsToRemove = handTiles.map(t => t.id);
-                        const newHand = prev.playerTopHand.filter(t => !handIdsToRemove.includes(t.id));
-                        return { ...prev, board: newBoard, playerTopHand: newHand, lastDrawnTileId: { ...prev.lastDrawnTileId, TOP: null } };
-                    });
-                    await new Promise(r => setTimeout(r, 500));
+                    } else { break; }
                 }
-            };
-
-            let movesMade = 0;
-            for (let i=0; i<10; i++) {
-                const currentHand = [...gameStateRef.current.playerTopHand];
-                const currentBoard = [...gameStateRef.current.board];
-                const move = calculateNextAIMove(currentHand, currentBoard);
-                if (!move) break;
-                if (move.type === 'DRAW') break;
-
-                let isValidAction = true;
-                if (move.type === 'ADD_TO_SET' && move.targetSetId) {
-                    const currentSet = currentBoard.find(s => s.id === move.targetSetId);
-                    if (!currentSet || !validateMove(currentSet.tiles, move.tiles)) isValidAction = false;
-                } else if (move.type === 'PLAY_NEW_SET' || move.type === 'STEAL_TILE') {
-                    if (!isValidSet(move.tiles)) isValidAction = false;
-                } else if (move.type === 'SPLIT_SET') {
-                    if (!currentBoard.some(s => s.id === move.splitSetId)) isValidAction = false;
-                }
-                
-                if (!isValidAction) break; 
-
-                const currentHandIds = currentHand.map(t => t.id);
-                const allTilesAvailable = move.tiles.every(t => {
-                    if (move.type === 'STEAL_TILE' && t.id === move.stolenTileId) return true;
-                    return currentHandIds.includes(t.id);
-                });
-                
-                if (!allTilesAvailable) break; 
-
-                await performMove(move);
-                movesMade++;
-                await new Promise(r => setTimeout(r, 500));
-            }
-
-            if (movesMade === 0) {
-                handleDraw('TOP');
-                await new Promise(r => setTimeout(r, 500));
-            }
-
-            setIsAutoPlaying(false);
-            aiStateRef.current.processing = false;
-        };
-
-        useEffect(() => {
-            if (isAutoPlaying && gameState.gamePhase === 'PLAYING') {
-                runAITurn();
-            }
-        }, [isAutoPlaying]);
-
-        const handleResetGame = () => setShowNewGameModal(true);
-
-        const confirmNewGameReset = () => {
-            localStorage.removeItem('rummikub_state');
-            const newDeck = generateDeck();
-            setGameState({ ...DEFAULT_STATE, deck: newDeck, gamePhase: 'SETUP', setupState: { topCard: null, bottomCard: null } });
-            setShowNewGameModal(false);
-        };
-
-        const handleSetupDraw = (pid) => {
-            setGameState(prev => {
-                if (prev.gamePhase !== 'SETUP') return prev;
-                if (pid === 'TOP' && prev.setupState.topCard) return prev;
-                if (pid === 'BOTTOM' && prev.setupState.bottomCard) return prev;
-                const newDeck = [...prev.deck];
-                const randomIndex = Math.floor(Math.random() * newDeck.length);
-                const drawnTile = newDeck.splice(randomIndex, 1)[0];
-                return {
-                    ...prev, deck: newDeck,
-                    setupState: {
-                        ...prev.setupState,
-                        topCard: pid === 'TOP' ? drawnTile : prev.setupState.topCard,
-                        bottomCard: pid === 'BOTTOM' ? drawnTile : prev.setupState.bottomCard
-                    }
-                };
-            });
-        };
-
-        const handleStartGame = () => {
-            const fullDeck = generateDeck();
-            const hand1 = fullDeck.splice(0, 14);
-            const hand2 = fullDeck.splice(0, 14);
-            setGameState(prev => ({
-                ...prev, gamePhase: 'PLAYING', deck: fullDeck,
-                playerTopHand: sortHand(hand1, prev.playerTopSort),
-                playerBottomHand: sortHand(hand2, prev.playerBottomSort),
-                setupState: { topCard: null, bottomCard: null },
-                lastDrawnTileId: { TOP: null, BOTTOM: null }
-            }));
-        };
-
-        const handleDragStart = (e, tile, sourceSetId) => {
-          e.preventDefault(); e.stopPropagation();
-          if ((Object.values(gameState.activeDrags)).some(d => d.tileId === tile.id)) return;
-          const rect = e.currentTarget.getBoundingClientRect();
-          dragOffsetsRef.current[e.pointerId] = { x: e.clientX - rect.left, y: e.clientY - rect.top };
-          setGameState(prev => ({
-              ...prev,
-              activeDrags: {
-                  ...prev.activeDrags,
-                  [e.pointerId]: {
-                      isDragging: false, tileId: tile.id, sourceSetId,
-                      x: e.clientX, y: e.clientY, startX: e.clientX, startY: e.clientY,
-                      tileData: tile, draggingSetId: null, initialSetPos: null
-                  }
-              }
-          }));
-        };
-
-        const handleSetDragStart = (e, setId) => {
-            e.preventDefault(); e.stopPropagation();
-            if ((Object.values(gameState.activeDrags)).some(d => d.draggingSetId === setId)) return;
-            const set = gameState.board.find(s => s.id === setId);
-            if (!set) return;
-            dragOffsetsRef.current[e.pointerId] = { x: 0, y: 0 };
-            setGameState(prev => ({
-                ...prev,
-                activeDrags: {
-                    ...prev.activeDrags,
-                    [e.pointerId]: {
-                        isDragging: true, draggingSetId: setId, tileId: null,
-                        initialSetPos: { x: set.x, y: set.y },
-                        startX: e.clientX, startY: e.clientY, x: e.clientX, y: e.clientY,
-                        sourceSetId: null, tileData: null
+                if (currentRun.length === 2 && jokersInHand.length - jokersUsed >= 1) {
+                    currentRun.push(jokersInHand[jokersUsed]);
+                    const sortedRun = autoSortSet(currentRun);
+                    if (sortedRun) {
+                        const pos = findFreePosition(board, sortedRun.length);
+                        return { type: 'PLAY_NEW_SET', tiles: sortedRun, targetPos: pos };
                     }
                 }
-            }));
-        };
+            }
+        }
 
-        const handleSetRotate = (setId) => {
-            setGameState(prev => ({
-                ...prev,
-                board: prev.board.map(s => {
-                    if (s.id === setId) {
-                        return { ...s, orientation: s.orientation === 'TOP' ? 'BOTTOM' : 'TOP' };
-                    }
-                    return s;
-                })
-            }));
-        };
-
-        const handleCycleRotate = () => {
-          setGameState(prev => {
-              const topCount = prev.board.filter(s => s.orientation === 'TOP').length;
-              const target = topCount > prev.board.length / 2 ? 'BOTTOM' : 'TOP';
-              return { ...prev, board: prev.board.map(s => ({ ...s, orientation: target })) };
-          });
-        };
+        for (const set of board) {
+            if (set.tiles.length >= 5) {
+                 const nonJokers = set.tiles.filter(t => !t.isJoker);
+                 if (nonJokers.length >= 2 && nonJokers[0].color === nonJokers[1].color) {
+                     const runColor = nonJokers[0].color;
+                     for (const tile of hand) {
+                         if (tile.isJoker) continue;
+                         if (tile.color !== runColor) continue;
+                         if (set.tiles.some(t => !t.isJoker && t.value === tile.value)) {
+                             const combined = [...set.tiles, tile];
+                             const sorted = sortTiles(combined, 'RUN');
+                             for (let i = 0; i < sorted.length - 1; i++) {
+                                 const t1 = sorted[i];
+                                 const t2 = sorted[i+1];
+                                 if (!t1.isJoker && !t2.isJoker && t1.value === t2.value) {
+                                     const left = sorted.slice(0, i+1);
+                                     const right = sorted.slice(i+1);
+                                     if (isValidSet(left) && isValidSet(right)) {
+                                         return { type: 'SPLIT_SET', tiles: [tile], splitSetId: set.id, newSet1: left, newSet2: right };
+                                     }
+                                 }
+                             }
+                         }
+                     }
+                 }
+            }
+        }
         
-        const handleCompactBoard = () => {
-            setGameState(prev => ({ ...prev, board: compactBoardLogic(prev.board) }));
-        };
+        const partialSets: {tiles: TileData[], neededVal?: number, neededColor?: string, type: 'RUN'|'GROUP'}[] = [];
+        for (const valStr in byValue) {
+            const group = byValue[valStr];
+            if (group.length === 2) partialSets.push({ tiles: group, neededVal: parseInt(valStr), type: 'GROUP' });
+        }
+        for (const color in byColor) {
+            const tiles = byColor[color].sort((a,b) => a.value - b.value);
+            for(let i=0; i<tiles.length-1; i++) {
+                const t1 = tiles[i];
+                const t2 = tiles[i+1];
+                if (t2.value - t1.value === 1) {
+                    if (t1.value > 1) partialSets.push({ tiles: [t1, t2], neededVal: t1.value - 1, neededColor: color, type: 'RUN' });
+                    if (t2.value < 13) partialSets.push({ tiles: [t1, t2], neededVal: t2.value + 1, neededColor: color, type: 'RUN' });
+                } else if (t2.value - t1.value === 2) {
+                    partialSets.push({ tiles: [t1, t2], neededVal: t1.value + 1, neededColor: color, type: 'RUN' });
+                }
+            }
+        }
 
-        const handlePointerMove = (e) => {
-          e.preventDefault();
-          const dragData = gameState.activeDrags[e.pointerId];
-          if (!dragData) return;
-          const { tileId, isDragging, startX, startY, draggingSetId, initialSetPos } = dragData;
-          if (isDragging && draggingSetId && initialSetPos) {
-              const dx = e.clientX - startX;
-              const dy = e.clientY - startY;
-              setGameState(prev => ({
-                  ...prev,
-                  board: prev.board.map(s => {
-                      if (s.id === draggingSetId) {
-                          return { ...s, x: initialSetPos.x + dx, y: initialSetPos.y + dy };
-                      }
-                      return s;
-                  }),
-                  activeDrags: {
-                      ...prev.activeDrags,
-                      [e.pointerId]: { ...dragData, x: e.clientX, y: e.clientY }
-                  }
-              }));
-              return;
-          }
-          if (tileId) {
-              if (!isDragging) {
-                  const dist = Math.hypot(e.clientX - startX, e.clientY - startY);
-                  if (dist > 5) { 
-                      setGameState(prev => ({
-                          ...prev,
-                          activeDrags: {
-                              ...prev.activeDrags,
-                              [e.pointerId]: { ...dragData, isDragging: true, x: e.clientX, y: e.clientY }
-                          }
-                      }));
-                  }
-              } else {
-                  setGameState(prev => ({
-                      ...prev,
-                      activeDrags: {
-                          ...prev.activeDrags,
-                          [e.pointerId]: { ...dragData, x: e.clientX, y: e.clientY }
-                      }
-                  }));
-              }
-          }
-        };
+        for (const partial of partialSets) {
+            for (const set of board) {
+                const targetTileIndex = set.tiles.findIndex(t => 
+                    !t.isJoker && 
+                    t.value === partial.neededVal && 
+                    (partial.type === 'RUN' ? t.color === partial.neededColor : t.color !== partial.tiles[0].color && t.color !== partial.tiles[1].color)
+                );
+                if (targetTileIndex !== -1) {
+                    const tileToSteal = set.tiles[targetTileIndex];
+                    const remainder = [...set.tiles];
+                    remainder.splice(targetTileIndex, 1);
+                    const left = remainder.slice(0, targetTileIndex);
+                    const right = remainder.slice(targetTileIndex); 
+                    let validSteal = false;
+                    let splits = false;
+                    
+                    if (remainder.length >= 3 && isValidSet(remainder)) {
+                        validSteal = true;
+                    } else if (left.length >= 3 && isValidSet(left) && right.length >= 3 && isValidSet(right)) {
+                        validSteal = true;
+                        splits = true;
+                    } else if ((left.length >= 3 && isValidSet(left) && right.length === 0) || (right.length >= 3 && isValidSet(right) && left.length === 0)) {
+                         validSteal = true;
+                    }
 
-        const handlePointerUp = (e) => {
-          const dragData = gameState.activeDrags[e.pointerId];
-          if (!dragData) return;
-          delete dragOffsetsRef.current[e.pointerId];
-          const { isDragging, tileId, tileData, sourceSetId, draggingSetId } = dragData;
-          const cleanupDrag = (state) => {
-              const newDrags = { ...state.activeDrags };
-              delete newDrags[e.pointerId];
-              return { ...state, activeDrags: newDrags };
-          };
-          if (draggingSetId) {
-              setGameState(prev => cleanupDrag(prev));
-              return;
-          }
-          if (!tileId || !tileData) {
-              setGameState(prev => cleanupDrag(prev));
-              return;
-          }
-          if (!isDragging) {
-              const owner = sourceSetId?.includes('TOP') ? 'TOP' : (sourceSetId?.includes('BOTTOM') ? 'BOTTOM' : null);
-              if (owner) {
-                  handleTileClick(tileId, owner);
-              }
-              setGameState(prev => cleanupDrag(prev));
-              return;
-          }
-          const elements = document.elementsFromPoint(e.clientX, e.clientY);
-          const targetRackElement = elements.find(el => el.hasAttribute('data-rack-id'));
-          const targetRackId = targetRackElement?.getAttribute('data-rack-id');
-          const targetSlotElement = elements.find(el => el.hasAttribute('data-slot-x'));
-          let targetSlotX, targetSlotY;
-          if (targetSlotElement) {
-              targetSlotX = parseInt(targetSlotElement.getAttribute('data-slot-x') || '0');
-              targetSlotY = parseInt(targetSlotElement.getAttribute('data-slot-y') || '0');
-          }
-          const targetSetElement = elements.find(el => el.hasAttribute('data-set-id'));
-          const targetSetId = targetSetElement?.getAttribute('data-set-id');
-          const boardEl = document.getElementById('game-board-container');
-          let targetPosOverride;
-          if (!targetRackId && !targetSetId && boardEl && gameState.interactionMode === 'REORDER_BOARD') {
-              const rect = boardEl.getBoundingClientRect();
-              const centerX = rect.left + rect.width / 2;
-              const centerY = rect.top + rect.height / 2;
-              targetPosOverride = { x: e.clientX - centerX, y: e.clientY - centerY };
-          }
-          if (gameState.interactionMode === 'REORDER_BOARD' || targetRackId) {
-               commitDrop(tileId, tileData, sourceSetId, targetRackId || undefined, targetSlotX, targetSlotY, targetSetId || undefined, targetPosOverride);
-          }
-          setGameState(prev => cleanupDrag(prev));
-        };
-
-        const getActiveHand = useCallback((pid) => {
-          return pid === 'TOP' ? gameState.playerTopHand : gameState.playerBottomHand;
-        }, [gameState.playerTopHand, gameState.playerBottomHand]);
-
-        const handleTileClick = (tileId, owner) => {
-          setGameState(prev => {
-            const currentSelection = prev.selectedTileIds[owner];
-            const isSelected = currentSelection.includes(tileId);
-            const newSelection = isSelected 
-              ? currentSelection.filter(id => id !== tileId)
-              : [...currentSelection, tileId];
-            return {
-              ...prev,
-              activePlayer: owner, 
-              selectedTileIds: { ...prev.selectedTileIds, [owner]: newSelection }
-            };
-          });
-        };
-
-        const handleSort = (pid, method) => {
-          const hand = getActiveHand(pid);
-          const sorted = sortHand(hand, method);
-          setGameState(prev => ({
-              ...prev,
-              playerTopHand: pid === 'TOP' ? sorted : prev.playerTopHand,
-              playerBottomHand: pid === 'BOTTOM' ? sorted : prev.playerBottomHand,
-              playerTopSort: pid === 'TOP' ? method : prev.playerTopSort,
-              playerBottomSort: pid === 'BOTTOM' ? method : prev.playerBottomSort,
-              lastDrawnTileId: { ...prev.lastDrawnTileId, [pid]: null }
-          }));
-        };
-
-        const handleDraw = (pid) => {
-          setGameState(prev => {
-              if (prev.deck.length === 0) return prev;
-              const newDeck = [...prev.deck];
-              const drawnTile = newDeck.pop();
-              const hand = pid === 'TOP' ? prev.playerTopHand : prev.playerBottomHand;
-              const pos = findFreeRackSlot(hand);
-              drawnTile.rackX = pos.x;
-              drawnTile.rackY = pos.y;
-              const newHand = [...hand, drawnTile];
-              return {
-                  ...prev, deck: newDeck,
-                  playerTopHand: pid === 'TOP' ? newHand : prev.playerTopHand,
-                  playerBottomHand: pid === 'BOTTOM' ? newHand : prev.playerBottomHand,
-                  activePlayer: pid,
-                  lastDrawnTileId: { ...prev.lastDrawnTileId, [pid]: drawnTile.id }
-              };
-          });
-        };
-
-        const handlePlayNewSet = (pid) => {
-          const hand = getActiveHand(pid);
-          const selection = gameState.selectedTileIds[pid];
-          const selectedTiles = hand.filter(t => selection.includes(t.id));
-          if (selectedTiles.length === 0) return;
-          const isReordering = gameState.interactionMode === 'REORDER_BOARD';
-          const requireValid = !isReordering;
-          const candidateSet = autoSortSet(selectedTiles, requireValid);
-          if (candidateSet) {
-              const newHand = hand.filter(t => !selection.includes(t.id));
-              const pos = findFreePosition(gameState.board, candidateSet.length);
-              setGameState(prev => ({
-                  ...prev,
-                  board: [...prev.board, { 
-                      id: uuidv4(), tiles: candidateSet, orientation: pid, createdBy: pid,
-                      rotation: (Math.random() * 4) - 2, x: pos.x, y: pos.y
-                  }],
-                  selectedTileIds: { ...prev.selectedTileIds, [pid]: [] },
-                  playerTopHand: pid === 'TOP' ? newHand : prev.playerTopHand,
-                  playerBottomHand: pid === 'BOTTOM' ? newHand : prev.playerBottomHand,
-                  activePlayer: pid,
-                  lastDrawnTileId: { ...prev.lastDrawnTileId, [pid]: null }
-              }));
-          }
-        };
-
-        const handleSetClick = (e, setId) => {
-            if (gameState.interactionMode === 'SPLIT_SET') {
-                const setIndex = gameState.board.findIndex(s => s.id === setId);
-                if (setIndex === -1) return;
-                const set = gameState.board[setIndex];
-                if (set.tiles.length < 6) return; 
-                const setElement = e.currentTarget;
-                const clickX = e.clientX;
-                const clickY = e.clientY;
-                const tileElements = Array.from(setElement.children).filter(child => !child.classList.contains('absolute')); 
-                let minDistance = Infinity;
-                let splitIndex = -1;
-                for (let i = 1; i < tileElements.length; i++) {
-                    const rectPrev = tileElements[i-1].getBoundingClientRect();
-                    const rectNext = tileElements[i].getBoundingClientRect();
-                    const midX = (rectPrev.right + rectNext.left) / 2;
-                    const midY = (rectPrev.top + rectPrev.height/2 + rectNext.top + rectNext.height/2) / 2;
-                    const dist = Math.hypot(clickX - midX, clickY - midY);
-                    if (dist < minDistance) {
-                        minDistance = dist;
-                        splitIndex = i;
+                    if (validSteal) {
+                        const newSet = [...partial.tiles, tileToSteal];
+                        const sortedNewSet = autoSortSet(newSet);
+                        if (sortedNewSet) {
+                            const pos = findFreePosition(board, sortedNewSet.length);
+                            return { type: 'STEAL_TILE', tiles: sortedNewSet, sourceSetId: set.id, stolenTileId: tileToSteal.id, targetPos: pos, remainderSplit: splits };
+                        }
                     }
                 }
-                if (splitIndex !== -1) {
-                    const tiles1 = set.tiles.slice(0, splitIndex);
-                    const tiles2 = set.tiles.slice(splitIndex);
-                    const dims1 = getSetDimensions(tiles1.length);
-                    const dims2 = getSetDimensions(tiles2.length);
-                    const gap = 10; 
-                    const totalWidth = dims1.width + gap + dims2.width;
-                    const x1 = set.x - (totalWidth / 2) + (dims1.width / 2);
-                    const x2 = x1 + (dims1.width / 2) + gap + (dims2.width / 2);
-                    const newSet1 = { ...set, id: uuidv4(), tiles: tiles1, x: x1, y: set.y };
-                    const newSet2 = { ...set, id: uuidv4(), tiles: tiles2, x: x2, y: set.y };
-                    const newBoard = [...gameState.board];
-                    newBoard.splice(setIndex, 1, newSet1, newSet2);
-                    setGameState(prev => ({ ...prev, board: newBoard }));
-                }
-                return;
             }
+        }
 
-            const pidTop = 'TOP';
-            const pidBottom = 'BOTTOM';
-            const topSel = gameState.selectedTileIds[pidTop];
-            const bottomSel = gameState.selectedTileIds[pidBottom];
-            let actingPlayer = null;
-            if (topSel.length > 0 && bottomSel.length === 0) actingPlayer = pidTop;
-            else if (bottomSel.length > 0 && topSel.length === 0) actingPlayer = pidBottom;
-            else if (topSel.length > 0 && bottomSel.length > 0) {
-                actingPlayer = gameState.activePlayer || pidBottom;
-            }
-            if (!actingPlayer) return;
-            const targetSetIndex = gameState.board.findIndex(b => b.id === setId);
-            if (targetSetIndex === -1) return;
-            const targetSet = gameState.board[targetSetIndex];
-            const hand = getActiveHand(actingPlayer);
-            const selection = gameState.selectedTileIds[actingPlayer];
-            const selectedTiles = hand.filter(t => selection.includes(t.id));
-            if (selectedTiles.length === 0) return;
-            const isReordering = gameState.interactionMode === 'REORDER_BOARD';
-            let newTiles = null;
-            if (isReordering) {
-                const combined = [...targetSet.tiles, ...selectedTiles];
-                newTiles = autoSortSet(combined, false); 
-            } else {
-                newTiles = validateMove(targetSet.tiles, selectedTiles);
-            }
-            if (newTiles) {
-                const newHand = hand.filter(t => !selection.includes(t.id));
-                const newBoard = [...gameState.board];
-                newBoard[targetSetIndex] = { ...targetSet, tiles: newTiles };
-                setGameState(prev => ({
-                    ...prev,
-                    board: newBoard,
-                    playerTopHand: actingPlayer === 'TOP' ? newHand : prev.playerTopHand,
-                    playerBottomHand: actingPlayer === 'BOTTOM' ? newHand : prev.playerBottomHand,
-                    selectedTileIds: { ...prev.selectedTileIds, [actingPlayer]: [] },
-                    lastDrawnTileId: { ...prev.lastDrawnTileId, [actingPlayer]: null }
-                }));
-            }
-        };
+        return { type: 'DRAW', tiles: [] };
+    };
 
-        const toggleReorder = () => {
-            setGameState(prev => {
-                if (prev.interactionMode === 'REORDER_BOARD') {
-                    if (!validateBoard(prev.board)) return prev; 
-                    return { ...prev, interactionMode: 'IDLE', boardSnapshot: null, rackSnapshots: null, activePlayer: null };
-                } else {
-                    return {
-                      ...prev,
-                      interactionMode: 'REORDER_BOARD',
-                      boardSnapshot: JSON.parse(JSON.stringify(prev.board)),
-                      rackSnapshots: {
-                          TOP: JSON.parse(JSON.stringify(prev.playerTopHand)),
-                          BOTTOM: JSON.parse(JSON.stringify(prev.playerBottomHand))
-                      },
-                      activePlayer: null 
-                    };
-                }
-            });
-        };
-        
-        const toggleSplitMode = () => {
-            setGameState(prev => ({ ...prev, interactionMode: prev.interactionMode === 'SPLIT_SET' ? 'IDLE' : 'SPLIT_SET' }));
-        };
+    // --- COMPONENTS ---
 
-        const toggleAutoPlay = () => setIsAutoPlaying(prev => !prev);
+    interface TileProps {
+      tile: TileData;
+      isSelected?: boolean;
+      isDragging?: boolean;
+      isNew?: boolean;
+      size?: 'sm' | 'md' | 'lg';
+      rotation?: number; 
+      orientation?: 'portrait' | 'landscape';
+    }
 
-        const handleResetBoard = () => {
-            setGameState(prev => ({
-                ...prev,
-                board: prev.boardSnapshot ? JSON.parse(JSON.stringify(prev.boardSnapshot)) : prev.board,
-                playerTopHand: prev.rackSnapshots ? JSON.parse(JSON.stringify(prev.rackSnapshots.TOP)) : prev.playerTopHand,
-                playerBottomHand: prev.rackSnapshots ? JSON.parse(JSON.stringify(prev.rackSnapshots.BOTTOM)) : prev.playerBottomHand,
-            }));
-        };
+    const Tile: React.FC<TileProps> = ({ 
+      tile, 
+      isSelected = false, 
+      isDragging = false,
+      isNew = false,
+      size = 'md',
+      rotation = 0,
+      orientation = 'portrait'
+    }) => {
+      const colorClass = tile.color ? COLOR_MAP[tile.color] : 'text-gray-800';
+      const sizeClasses = {
+        portrait: {
+            sm: 'w-8 h-12 text-xl',
+            md: 'w-10 h-14 text-3xl md:w-12 md:h-16 md:text-4xl',
+            lg: 'w-14 h-20 text-6xl',
+        },
+        landscape: {
+            sm: 'w-12 h-8 text-xl',
+            md: 'w-14 h-10 text-3xl md:w-16 md:h-12 md:text-4xl',
+            lg: 'w-20 h-14 text-6xl',
+        }
+      };
+      const currentSizeClass = sizeClasses[orientation][size];
+      const jokerSizes = { sm: 20, md: 32, lg: 40 };
+      const isSixOrNine = !tile.isJoker && (tile.value === 6 || tile.value === 9);
 
-        const draggingTileIds = (Object.values(gameState.activeDrags)).map(d => d.tileId).filter(id => id !== null);
-
-        return (
-          <div 
-              className="flex flex-col h-screen w-screen overflow-hidden bg-gray-900 font-sans touch-none"
-              onPointerMove={handlePointerMove}
-              onPointerUp={handlePointerUp}
-              onPointerCancel={handlePointerUp}
-              onContextMenu={(e) => e.preventDefault()} 
-          >
-            {gameState.gamePhase === 'PLAYING' && (
-              <PlayerRack 
-                  playerId="TOP"
-                  tiles={gameState.playerTopHand}
-                  selectedTileIds={gameState.selectedTileIds.TOP}
-                  draggedTileIds={draggingTileIds}
-                  isMyTurn={gameState.activePlayer === 'TOP'}
-                  onSort={(method) => handleSort('TOP', method)}
-                  onDraw={() => handleDraw('TOP')}
-                  onPlayNewSet={() => handlePlayNewSet('TOP')}
-                  onDragStart={handleDragStart}
-                  interactionMode={gameState.interactionMode}
-                  disabled={false}
-                  newTileId={gameState.lastDrawnTileId.TOP}
-              />
-            )}
-
-            <GameBoard 
-              sets={gameState.board}
-              interactionMode={gameState.interactionMode}
-              gamePhase={gameState.gamePhase}
-              setupState={gameState.setupState}
-              draggedTileIds={draggingTileIds}
-              hasSelectedTiles={gameState.selectedTileIds.TOP.length > 0 || gameState.selectedTileIds.BOTTOM.length > 0}
-              onSetClick={handleSetClick}
-              onToggleReorder={toggleReorder}
-              onResetBoard={handleResetBoard}
-              onResetGame={handleResetGame}
-              onDragStart={handleDragStart}
-              onSetupDraw={handleSetupDraw}
-              onStartGame={handleStartGame}
-              onSetDragStart={handleSetDragStart}
-              onSetRotate={handleSetRotate}
-              onCycleRotate={handleCycleRotate}
-              onCompactBoard={handleCompactBoard}
-              onToggleSplit={toggleSplitMode}
-              isAutoPlaying={isAutoPlaying}
-              onToggleAutoPlay={toggleAutoPlay}
-            />
-
-            {gameState.gamePhase === 'PLAYING' && (
-              <PlayerRack 
-                  playerId="BOTTOM"
-                  tiles={gameState.playerBottomHand}
-                  selectedTileIds={gameState.selectedTileIds.BOTTOM}
-                  draggedTileIds={draggingTileIds}
-                  isMyTurn={gameState.activePlayer === 'BOTTOM'}
-                  onSort={(method) => handleSort('BOTTOM', method)}
-                  onDraw={() => handleDraw('BOTTOM')}
-                  onPlayNewSet={() => handlePlayNewSet('BOTTOM')}
-                  onDragStart={handleDragStart}
-                  interactionMode={gameState.interactionMode}
-                  disabled={false}
-                  newTileId={gameState.lastDrawnTileId.BOTTOM}
-              />
-            )}
-
-            {Object.entries(gameState.activeDrags).map(([pointerId, dragItem]) => {
-                const drag = dragItem;
-                if (!drag.isDragging || !drag.tileData) return null;
-                const offset = dragOffsetsRef.current[parseInt(pointerId)] || { x: 0, y: 0 };
-                
-                return (
-                    <div 
-                      key={pointerId}
-                      className="fixed pointer-events-none z-50 shadow-2xl opacity-90 scale-110"
-                      style={{ 
-                          left: drag.x - offset.x, 
-                          top: drag.y - offset.y
-                      }}
-                    >
-                        <Tile tile={drag.tileData} size="md" />
+      return (
+        <div
+          className={clsx(
+            "relative flex items-center justify-center rounded-md transition-transform duration-150 select-none cursor-pointer overflow-hidden",
+            "bg-rummy-tile shadow-tile",
+            isSelected ? "shadow-tile-selected -translate-y-1" : "",
+            currentSizeClass,
+            isSelected ? "" : (
+                isNew ? "border-4 border-green-500 box-border" : (
+                    tile.isDuplicate ? "border-4 border-gray-400 border-dashed box-border" : "border border-gray-100"
+                )
+            ),
+            isDragging ? "opacity-0" : "opacity-100" 
+          )}
+        >
+            <div 
+                className={clsx("font-bold tracking-tighter flex items-center justify-center w-full h-full transition-transform duration-300", colorClass)}
+                style={{ transform: `rotate(${rotation}deg)` }}
+            >
+                {tile.isJoker ? (
+                    <Ghost size={jokerSizes[size]} className="mx-auto" />
+                ) : (
+                    <div className="flex flex-col items-center justify-center -mt-2">
+                        <span>{tile.value}</span>
+                        {isSixOrNine && (
+                            <div className="w-full h-[3px] bg-current mt-[0px] opacity-60 rounded-full"></div>
+                        )}
                     </div>
+                )}
+            </div>
+            <div className="absolute inset-0 rounded-md shadow-[inset_0_1px_1px_rgba(255,255,255,0.6),inset_0_-1px_1px_rgba(0,0,0,0.1)] pointer-events-none"></div>
+        </div>
+      );
+    };
+
+    interface PlayerRackProps {
+      playerId: PlayerId;
+      tiles: TileData[];
+      selectedTileIds: string[];
+      isMyTurn: boolean;
+      draggedTileIds: string[]; 
+      onSort: (method: SortMethod) => void;
+      onDraw: () => void;
+      onPlayNewSet: () => void;
+      onDragStart: (e: React.PointerEvent, tile: TileData, sourceId: string) => void;
+      interactionMode: 'IDLE' | 'REORDER_BOARD';
+      disabled?: boolean;
+      newTileId?: string | null;
+      isSideways?: boolean;
+    }
+
+    const PlayerRack: React.FC<PlayerRackProps> = ({
+      playerId,
+      tiles,
+      selectedTileIds,
+      draggedTileIds,
+      onSort,
+      onDraw,
+      onPlayNewSet,
+      onDragStart,
+      interactionMode,
+      disabled = false,
+      newTileId = null,
+      isSideways = false
+    }) => {
+      const isTop = playerId === 'TOP';
+      const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+      const [offsetY, setOffsetY] = useState(0);
+
+      const TILE_WIDTH = isSideways ? 70 : 50; 
+      const TILE_HEIGHT = isSideways ? 54 : 70; 
+
+      const totalTiles = tiles.length;
+      const dynamicRows = totalTiles > (RACK_ROWS * RACK_COLS) ? 3 : RACK_ROWS;
+      const maxTileX = tiles.reduce((max, t) => Math.max(max, t.rackX || 0), 0);
+      const tileBasedCols = Math.ceil(tiles.length / dynamicRows);
+      const dynamicCols = Math.max(RACK_COLS, tileBasedCols, maxTileX + 1);
+
+      const RAW_GRID_WIDTH = dynamicCols * TILE_WIDTH;
+      const RAW_GRID_HEIGHT = dynamicRows * TILE_HEIGHT;
+
+      const BUTTON_PANEL_WIDTH = 90;
+      const TOTAL_BUTTON_SPACE = (BUTTON_PANEL_WIDTH * 2) + 32;
+      const availableWidth = windowWidth - TOTAL_BUTTON_SPACE;
+      const scale = Math.min(1, availableWidth / RAW_GRID_WIDTH);
+
+      const renderedWidth = RAW_GRID_WIDTH * scale;
+      const renderedHeight = RAW_GRID_HEIGHT * scale;
+
+      useEffect(() => {
+        const handleResize = () => setWindowWidth(window.innerWidth);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+      }, []);
+
+      const gridMap: Record<string, TileData> = {};
+      tiles.forEach(t => {
+          const x = t.rackX ?? 0;
+          const y = t.rackY ?? 0;
+          gridMap[`${x},${y}`] = t;
+      });
+
+      const handleMoveVisualUp = (e) => { e.stopPropagation(); setOffsetY(prev => prev + (isTop ? 10 : -10)); };
+      const handleMoveVisualDown = (e) => { e.stopPropagation(); setOffsetY(prev => prev + (isTop ? -10 : 10)); };
+
+      const buttonRotation = isSideways ? (isTop ? -90 : 90) : 0;
+      const buttonContentStyle = { transform: `rotate(${buttonRotation}deg)` };
+      const tileOrientation = isSideways ? 'landscape' : 'portrait';
+      let tileTextRotation = 0;
+      if (isSideways) { tileTextRotation = isTop ? -90 : 90; }
+
+      const ControlsPanel = (
+          <div className="flex flex-col gap-2 flex-shrink-0 z-20 w-[80px]">
+              {!isTop && (
+                <div className="flex gap-1 mb-1 w-full">
+                    <button onPointerDown={handleMoveVisualUp} className="flex-1 bg-gray-700 text-gray-300 rounded p-1 flex items-center justify-center shadow-md active:bg-gray-600 h-10"><ChevronUp size={24} style={buttonContentStyle} /></button>
+                    <button onPointerDown={handleMoveVisualDown} className="flex-1 bg-gray-700 text-gray-300 rounded p-1 flex items-center justify-center shadow-md active:bg-gray-600 h-10"><ChevronDown size={24} style={buttonContentStyle} /></button>
+                </div>
+              )}
+              <button onClick={() => onSort('GROUP')} className="flex flex-col items-center justify-center p-2 bg-gray-700 rounded text-white active:bg-gray-600 h-16 w-full shadow-md">
+                <div style={buttonContentStyle} className="flex flex-col items-center"><Layers size={24} /><span className="text-[10px] font-bold mt-1">123</span></div>
+              </button>
+              <button onClick={() => onSort('RUN')} className="flex flex-col items-center justify-center p-2 bg-gray-700 rounded text-white active:bg-gray-600 h-16 w-full shadow-md">
+                <div style={buttonContentStyle} className="flex flex-col items-center"><Palette size={24} /><span className="text-[10px] font-bold mt-1">Colors</span></div>
+              </button>
+          </div>
+      );
+
+      const ActionsPanel = (
+          <div className="flex flex-col gap-2 flex-shrink-0 z-20 w-[80px]">
+               <button onClick={onDraw} className="flex flex-col items-center justify-center p-2 bg-gray-600 rounded text-white font-bold text-sm active:scale-95 transition-transform h-14 w-full shadow-lg">
+                 <div style={buttonContentStyle} className="flex flex-col items-center"><Download size={20} className="mb-1" /><span className="text-[10px]">DRAW</span></div>
+               </button>
+               <button onClick={onPlayNewSet} className="flex flex-col items-center justify-center p-2 bg-green-700 rounded text-white font-bold text-sm active:scale-95 transition-transform shadow-lg h-14 w-full">
+                 <div style={buttonContentStyle} className="flex flex-col items-center"><PlusSquare size={20} className="mb-1" /><span className="text-[10px]">PLAY SET</span></div>
+               </button>
+          </div>
+      );
+
+      const swapControls = isSideways && isTop;
+
+      return (
+        <div 
+          className={clsx("flex items-center justify-between p-2 bg-gray-800/95 shadow-2xl backdrop-blur-sm z-40 w-full transition-all duration-300 select-none box-border absolute left-0 right-0",
+            isTop ? "top-0 border-b-4 border-gray-700" : "bottom-0 border-t-4 border-gray-700",
+            disabled ? "opacity-40 pointer-events-none grayscale" : "opacity-100"
+          )}
+          data-rack-id={playerId}
+          style={{ touchAction: 'none', transform: isTop ? `rotate(180deg) translateY(${offsetY}px)` : `translateY(${offsetY}px)` }} 
+        >
+          {swapControls ? ActionsPanel : ControlsPanel}
+          <div className="flex-grow flex justify-center items-center overflow-hidden h-full">
+            <div className="relative overflow-visible" style={{ width: renderedWidth, height: renderedHeight }}>
+                <div className="absolute top-0 left-0 origin-top-left" style={{ width: RAW_GRID_WIDTH, height: RAW_GRID_HEIGHT, transform: `scale(${scale})` }}>
+                    {Array.from({ length: dynamicRows }).map((_, r) => (
+                        Array.from({ length: dynamicCols }).map((_, c) => {
+                            const tile = gridMap[`${c},${r}`];
+                            return (
+                                <div key={`${c}-${r}`} data-slot-x={c} data-slot-y={r} className={clsx("absolute rounded border-transparent flex items-center justify-center", isSideways ? "w-[68px] h-[52px]" : "w-[48px] h-[64px]")} style={{ left: c * TILE_WIDTH, top: r * TILE_HEIGHT }}>
+                                    {tile && (
+                                        <div data-tile-id={tile.id} onPointerDown={(e) => { if (interactionMode === 'IDLE' || interactionMode === 'REORDER_BOARD') onDragStart(e, tile, `RACK_${playerId}`); }} className="touch-none w-full h-full">
+                                            <Tile tile={tile} isSelected={selectedTileIds.includes(tile.id)} isDragging={draggedTileIds.includes(tile.id)} isNew={tile.id === newTileId} size="md" rotation={tileTextRotation} orientation={tileOrientation} />
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })
+                    ))}
+                </div>
+            </div>
+          </div>
+          {swapControls ? ControlsPanel : ActionsPanel}
+        </div>
+      );
+    };
+
+    interface GameBoardProps {
+      sets: BoardSet[];
+      interactionMode: 'IDLE' | 'REORDER_BOARD' | 'SPLIT_SET';
+      gamePhase: GamePhase;
+      setupState: { topCard: TileData | null; bottomCard: TileData | null };
+      draggedTileIds: string[]; 
+      hasSelectedTiles: boolean;
+      onSetClick: (e: React.PointerEvent, setId: string) => void;
+      onToggleReorder: () => void;
+      onResetBoard: () => void;
+      onResetGame: () => void;
+      onDragStart: (e: React.PointerEvent, tile: TileData, sourceSetId: string) => void;
+      onSetupDraw: (pid: PlayerId) => void;
+      onStartGame: () => void;
+      onSetDragStart: (e: React.PointerEvent, setId: string) => void;
+      onSetRotate: (setId: string) => void;
+      onCycleRotate: () => void;
+      onCompactBoard: () => void;
+      onToggleSplit: () => void;
+      isAutoPlaying: boolean;
+      onToggleAutoPlay: () => void;
+      isSideways: boolean;
+      onToggleSideways: () => void;
+    }
+
+    const GameBoard: React.FC<GameBoardProps> = ({ 
+        sets, interactionMode, gamePhase, setupState, draggedTileIds, hasSelectedTiles,
+        onSetClick, onToggleReorder, onResetBoard, onResetGame, onDragStart, onSetupDraw,
+        onStartGame, onSetDragStart, onSetRotate, onCycleRotate, onCompactBoard, onToggleSplit,
+        isAutoPlaying, onToggleAutoPlay, isSideways, onToggleSideways
+    }) => {
+      const isReordering = interactionMode === 'REORDER_BOARD';
+      const isSplitting = interactionMode === 'SPLIT_SET';
+      const boardRef = useRef(null);
+      const [boardScale, setBoardScale] = useState(1);
+      const allSetsValid = sets.every(s => isValidSet(s.tiles));
+
+      useEffect(() => {
+          if (sets.length === 0) { setBoardScale(1); return; }
+          let maxDistX = 0;
+          let maxDistY = 0;
+          sets.forEach(set => {
+              const { width: setW, height: setH } = getSetDimensions(set.tiles.length);
+              const visualW = isSideways ? setH : setW;
+              const visualH = isSideways ? setW : setH;
+              const screenX = isSideways ? Math.abs(set.y) : Math.abs(set.x);
+              const screenY = isSideways ? Math.abs(set.x) : Math.abs(set.y);
+              const distX = screenX + visualW / 2;
+              const distY = screenY + visualH / 2;
+              if (distX > maxDistX) maxDistX = distX;
+              if (distY > maxDistY) maxDistY = distY;
+          });
+          const safeWidth = (window.innerWidth / 2) - 60; 
+          const safeHeight = (window.innerHeight / 2) - 140;
+          let scaleX = 1;
+          let scaleY = 1;
+          if (maxDistX > safeWidth) scaleX = safeWidth / maxDistX;
+          if (maxDistY > safeHeight) scaleY = safeHeight / maxDistY;
+          setBoardScale(Math.max(0.4, Math.min(1, Math.min(scaleX, scaleY))));
+      }, [sets, window.innerWidth, window.innerHeight, isSideways]);
+
+      if (gamePhase === 'SETUP') {
+          return (
+              <div className="flex-1 bg-rummy-board relative flex flex-col items-center justify-center overflow-hidden shadow-inner">
+                 <div className="absolute inset-0 opacity-20 pointer-events-none z-0" style={{ backgroundImage: 'radial-gradient(#ffffff 1px, transparent 1px)', backgroundSize: '20px 20px' }}></div>
+                 <div className="relative w-64 h-64 flex items-center justify-center">
+                     {[...Array(6)].map((_, i) => (
+                         <div key={i} className="absolute w-12 h-16 bg-rummy-tile shadow-tile border border-gray-300 rounded" style={{ transform: `rotate(${Math.random() * 360}deg) translate(${Math.random() * 40 - 20}px, ${Math.random() * 40 - 20}px)`, zIndex: 0 }} />
+                     ))}
+                     {setupState.topCard && setupState.bottomCard && (
+                         <button onClick={onStartGame} className="absolute z-50 bg-green-600 text-white font-bold text-xl px-8 py-4 rounded-full shadow-2xl animate-bounce flex items-center gap-2 hover:bg-green-500 transition-colors"><Play fill="currentColor" /> Start Game</button>
+                     )}
+                 </div>
+                 <div className="absolute top-20 rotate-180 flex flex-col items-center gap-4">
+                     {setupState.topCard ? <div className="scale-150"><Tile tile={setupState.topCard} /></div> : <button onClick={() => onSetupDraw('TOP')} className="bg-gray-800 text-white px-6 py-3 rounded-lg shadow-xl font-bold active:scale-95 transition-transform">Draw for Start</button>}
+                 </div>
+                 <div className="absolute bottom-20 flex flex-col items-center gap-4">
+                     {setupState.bottomCard ? <div className="scale-150"><Tile tile={setupState.bottomCard} /></div> : <button onClick={() => onSetupDraw('BOTTOM')} className="bg-gray-800 text-white px-6 py-3 rounded-lg shadow-xl font-bold active:scale-95 transition-transform">Draw for Start</button>}
+                 </div>
+              </div>
+          );
+      }
+
+      const leftHudTextClass = isSideways ? "[writing-mode:vertical-rl] whitespace-nowrap" : "[writing-mode:vertical-rl] rotate-180 whitespace-nowrap";
+      const rightHudTextClass = "[writing-mode:vertical-rl] whitespace-nowrap";
+
+      return (
+        <div id="game-board-container" ref={boardRef} className="flex-1 bg-rummy-board relative overflow-hidden flex flex-col shadow-inner select-none" style={{ touchAction: isReordering ? 'none' : 'auto' }}>
+          <div className="absolute inset-0 opacity-20 pointer-events-none z-0" style={{ backgroundImage: 'radial-gradient(#ffffff 1px, transparent 1px)', backgroundSize: '20px 20px' }}></div>
+          <div className="absolute top-1/2 left-0 transform -translate-y-1/2 z-20 flex flex-col gap-6 items-start">
+                {!isReordering && (
+                    <>  
+                        <button onClick={(e) => { e.stopPropagation(); onToggleSideways(); }} className={clsx("w-12 py-6 rounded-r-xl shadow-lg font-bold text-xs tracking-widest border-l-0 border border-gray-600 hover:translate-x-1 transition-transform flex items-center justify-center", isSideways ? "bg-blue-800 text-white" : "bg-gray-700 text-gray-300")} title="Toggle Orientation">
+                             <span className={leftHudTextClass}>TABLE MODE</span>
+                             <RotateCcw size={14} className={clsx("mt-2", isSideways ? "" : "rotate-180")} />
+                        </button>
+                        <button onClick={(e) => { e.stopPropagation(); onResetGame(); }} className="w-12 py-8 rounded-r-xl shadow-lg font-bold text-xs tracking-widest bg-gray-800 text-white border-l-0 border border-gray-600 hover:translate-x-1 transition-transform flex items-center justify-center" title="Start New Game">
+                            <span className={leftHudTextClass}>NEW GAME</span>
+                        </button>
+                        <button onClick={(e) => { e.stopPropagation(); onToggleAutoPlay(); }} className={clsx("w-12 py-6 rounded-r-xl shadow-lg font-bold text-xs tracking-widest border-l-0 hover:translate-x-1 transition-transform flex items-center justify-center", isAutoPlaying ? "bg-yellow-500 text-black border-yellow-400 animate-pulse" : "bg-green-700 text-white border-green-600")} title="Toggle Auto Play AI">
+                            <span className={leftHudTextClass}>{isAutoPlaying ? "THINKING..." : "AUTO PLAY"}</span>
+                        </button>
+                    </>
+                )}
+          </div>
+          <div className="absolute top-1/2 right-0 transform -translate-y-1/2 z-20 flex flex-col gap-12 items-end">
+              <div className="flex flex-col gap-2">
+                {isReordering && (
+                    <button onClick={(e) => { e.stopPropagation(); onResetBoard(); }} className="w-12 py-6 rounded-l-xl shadow-lg font-bold text-xs tracking-widest bg-yellow-600 text-white hover:-translate-x-1 transition-transform flex items-center justify-center"><span className={rightHudTextClass}>RESET</span></button>
+                )}
+                <button onClick={(e) => { e.stopPropagation(); onToggleReorder(); }} className={clsx("w-12 py-6 rounded-l-xl shadow-lg font-bold text-xs tracking-widest hover:-translate-x-1 transition-transform flex items-center justify-center", isReordering ? (allSetsValid ? "bg-green-600 text-white" : "bg-red-600 text-white animate-pulse") : "bg-blue-600 text-white")}>
+                    <span className={rightHudTextClass}>{isReordering ? "DONE" : "REORDER"}</span>
+                </button>
+                <button onClick={(e) => { e.stopPropagation(); onCycleRotate(); }} className="w-12 py-6 rounded-l-xl shadow-lg font-bold text-xs tracking-widest bg-indigo-600 text-white hover:-translate-x-1 transition-transform flex items-center justify-center" title="Rotate Orientation"><span className={rightHudTextClass}>ROTATE</span></button>
+              </div>
+              <div className="flex flex-col gap-2">
+                 <button onClick={(e) => { e.stopPropagation(); onCompactBoard(); }} className="w-12 py-6 rounded-l-xl shadow-lg font-bold text-xs tracking-widest bg-yellow-500 text-black hover:-translate-x-1 transition-transform flex items-center justify-center" title="Compact Board"><span className={rightHudTextClass}>COMPACT</span></button>
+                <button onClick={(e) => { e.stopPropagation(); onToggleSplit(); }} className={clsx("w-12 py-6 rounded-l-xl shadow-lg font-bold text-xs tracking-widest hover:-translate-x-1 transition-transform flex items-center justify-center", isSplitting ? "bg-green-500 text-white ring-2 ring-white" : "bg-green-600 text-white")} title="Split Set"><span className={rightHudTextClass}>SPLIT</span></button>
+              </div>
+          </div>
+          <div id="game-board" className="absolute left-1/2 top-1/2 w-0 h-0 overflow-visible z-10 transition-transform duration-500 ease-out" style={{ transform: `scale(${boardScale})` }}>
+            {sets.map((set) => {
+                const isValid = isValidSet(set.tiles);
+                const renderX = isSideways ? set.y : set.x;
+                const renderY = isSideways ? -set.x : set.y;
+                const baseRotation = isSideways ? 0 : (set.orientation === 'TOP' ? 180 : 0);
+                const randomRotation = set.rotation || 0;
+                return (
+                  <div key={set.id} data-set-id={set.id} onPointerUp={(e) => onSetClick(e, set.id)} onPointerDown={(e) => { if (!isReordering && !isSplitting && !hasSelectedTiles) { onSetDragStart(e, set.id); } }} style={{ transform: `translate(-50%, -50%) translate(${renderX}px, ${renderY}px) rotate(${baseRotation + randomRotation}deg)`, position: 'absolute', left: 0, top: 0 }} className={clsx("bg-black/10 rounded-xl p-3 flex gap-1 transition-colors duration-200 border-2 items-center min-w-max", isSideways ? "flex-col" : "flex-row", isReordering ? (isValid ? "border-white/50 border-dashed" : "border-red-500 bg-red-900/20 border-dashed") : (!hasSelectedTiles && !isSplitting ? "border-transparent hover:bg-white/5 cursor-move" : "border-transparent hover:bg-white/5"), isSplitting && set.tiles.length >= 6 ? "cursor-crosshair hover:bg-green-900/30 border-green-500/50 border-dashed" : "")}>
+                    {isReordering && (
+                        <>
+                            <div onPointerDown={(e) => onSetDragStart(e, set.id)} className={clsx("absolute w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center shadow-lg cursor-move active:scale-95 transition-transform z-30", isSideways ? "-left-10 top-1/2 -translate-y-1/2" : "-top-10 left-1/2 -translate-x-[120%]")}><Move size={20} className="text-white" /></div>
+                            <div onPointerDown={(e) => { e.stopPropagation(); onSetRotate(set.id); }} className={clsx("absolute w-10 h-10 bg-yellow-600 rounded-full flex items-center justify-center shadow-lg cursor-pointer active:scale-95 transition-transform z-30", isSideways ? "-right-10 top-1/2 -translate-y-1/2" : "-top-10 left-1/2 translate-x-[20%]")}><RotateCcw size={20} className="text-white" /></div>
+                        </>
+                    )}
+                    {set.tiles.map((tile) => (
+                      <div key={tile.id} onPointerDown={(e) => { if (isReordering) { onDragStart(e, tile, set.id); } }} className={clsx(isReordering ? "cursor-grab active:cursor-grabbing" : "")}>
+                          <Tile tile={tile} size="md" isDragging={draggedTileIds.includes(tile.id)} orientation={isSideways ? 'landscape' : 'portrait'} rotation={isSideways ? 90 : 0} />
+                      </div>
+                    ))}
+                  </div>
                 );
             })}
-
-            {showNewGameModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-                    <div className="bg-gray-800 border border-gray-600 p-8 rounded-2xl shadow-2xl max-w-sm w-full flex flex-col gap-6 animate-in fade-in zoom-in duration-200">
-                        <div className="flex flex-col items-center gap-2">
-                            <AlertTriangle size={48} className="text-yellow-500 mb-2" />
-                            <h2 className="text-2xl font-bold text-white text-center">Start New Game?</h2>
-                            <p className="text-gray-300 text-center text-lg leading-relaxed">
-                                Are you sure? This will erase the current game and return to the setup phase.
-                            </p>
-                        </div>
-                        <div className="flex gap-4">
-                            <button 
-                                onClick={() => setShowNewGameModal(false)}
-                                className="flex-1 py-4 rounded-xl bg-gray-700 text-white font-bold text-lg active:scale-95 transition-transform hover:bg-gray-600"
-                            >
-                                Cancel
-                            </button>
-                            <button 
-                                onClick={confirmNewGameReset}
-                                className="flex-1 py-4 rounded-xl bg-red-600 text-white font-bold text-lg shadow-lg active:scale-95 transition-transform hover:bg-red-500"
-                            >
-                                New Game
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
           </div>
-        );
+        </div>
+      );
+    };
+
+    // --- APP ---
+
+    const DEFAULT_STATE: GameState = {
+        gamePhase: 'SETUP',
+        deck: [],
+        board: [],
+        boardSnapshot: null,
+        rackSnapshots: null,
+        playerTopHand: [],
+        playerBottomHand: [],
+        playerTopSort: 'RUN', 
+        playerBottomSort: 'RUN', 
+        selectedTileIds: { TOP: [], BOTTOM: [] },
+        activePlayer: null,
+        interactionMode: 'IDLE',
+        activeDrags: {},
+        setupState: { topCard: null, bottomCard: null },
+        lastDrawnTileId: { TOP: null, BOTTOM: null }
+    };
+
+    const App: React.FC = () => {
+      const [gameState, setGameState] = useState<GameState>(() => {
+          const saved = localStorage.getItem('rummikub_state');
+          if (saved) {
+              try {
+                  const parsed = JSON.parse(saved);
+                  if (parsed.board) parsed.board = parsed.board.map((s) => ({ ...s, x: s.x ?? 0, y: s.y ?? 0, createdBy: s.createdBy ?? s.orientation }));
+                  ['playerTopHand', 'playerBottomHand'].forEach(key => { if (parsed[key]) parsed[key] = sortHand(parsed[key], 'RUN'); });
+                  if (Array.isArray(parsed.selectedTileIds)) parsed.selectedTileIds = { TOP: [], BOTTOM: [] };
+                  if (parsed.dragState) { parsed.activeDrags = {}; delete parsed.dragState; }
+                  return parsed;
+              } catch (e) { console.error("Failed to load state", e); }
+          }
+          return DEFAULT_STATE;
+      });
+
+      const [showNewGameModal, setShowNewGameModal] = useState(false);
+      const [isAutoPlaying, setIsAutoPlaying] = useState(false);
+      const [isSideways, setIsSideways] = useState(false); 
+      const dragOffsetsRef = useRef<Record<number, {x: number, y: number}>>({});
+      const gameStateRef = useRef(gameState);
+
+      useEffect(() => { localStorage.setItem('rummikub_state', JSON.stringify(gameState)); }, [gameState]);
+      useEffect(() => { gameStateRef.current = gameState; }, [gameState]);
+      useEffect(() => {
+        if (gameState.deck.length === 0 && gameState.gamePhase === 'SETUP' && !gameState.setupState.topCard) {
+            setGameState(prev => ({ ...prev, deck: generateDeck() }));
+        }
+      }, []);
+
+      const commitDrop = (tileId, tileData, sourceSetId, targetRackId, targetSlotX, targetSlotY, targetSetId, targetPosOverride, specificCreatedSetId, bypassValidation = false) => {
+        setGameState(prev => {
+            if (sourceSetId && sourceSetId.startsWith('RACK_')) {
+                const isTop = sourceSetId === 'RACK_TOP';
+                const hand = isTop ? prev.playerTopHand : prev.playerBottomHand;
+                if (!hand.some(t => t.id === tileId)) return prev;
+            } else if (sourceSetId) {
+                const set = prev.board.find(s => s.id === sourceSetId);
+                if (!set || !set.tiles.some(t => t.id === tileId)) return prev;
+            }
+
+            if (targetRackId) {
+                 const isTop = targetRackId === 'TOP';
+                 const currentHand = isTop ? [...prev.playerTopHand] : [...prev.playerBottomHand];
+                 const updatedHand = currentHand.filter(t => t.id !== tileId);
+                 let newX = 0, newY = 0;
+                 if (targetSlotX !== undefined && targetSlotY !== undefined) {
+                     newX = targetSlotX; newY = targetSlotY;
+                 } else {
+                     const pos = findFreeRackSlot(updatedHand);
+                     newX = pos.x; newY = pos.y;
+                 }
+                 const existingOccupantIndex = updatedHand.findIndex(t => t.rackX === newX && t.rackY === newY);
+                 const tileToPlace = { ...tileData, rackX: newX, rackY: newY };
+                 if (existingOccupantIndex !== -1) {
+                     const occupant = updatedHand[existingOccupantIndex];
+                     updatedHand.splice(existingOccupantIndex, 1);
+                     const pos = findFreeRackSlot(updatedHand);
+                     occupant.rackX = pos.x; occupant.rackY = pos.y;
+                     updatedHand.push(occupant);
+                     updatedHand.push(tileToPlace);
+                 } else {
+                     updatedHand.push(tileToPlace);
+                 }
+                 let newBoard = [...prev.board];
+                 let removedFromBoard = false;
+                 if (sourceSetId && sourceSetId.indexOf('RACK') === -1) {
+                     const setIndex = newBoard.findIndex(s => s.id === sourceSetId);
+                     if (setIndex !== -1) {
+                         const setTiles = newBoard[setIndex].tiles.filter(t => t.id !== tileId);
+                         if (setTiles.length < newBoard[setIndex].tiles.length) {
+                             removedFromBoard = true;
+                             if (setTiles.length === 0) newBoard.splice(setIndex, 1);
+                             else newBoard[setIndex] = { ...newBoard[setIndex], tiles: setTiles };
+                         }
+                     }
+                 }
+                 if (sourceSetId && sourceSetId.indexOf('RACK') === -1 && !removedFromBoard) return prev;
+                 return { ...prev, board: newBoard, playerTopHand: isTop ? updatedHand : prev.playerTopHand, playerBottomHand: !isTop ? updatedHand : prev.playerBottomHand, lastDrawnTileId: { ...prev.lastDrawnTileId, [isTop ? 'TOP' : 'BOTTOM']: null } };
+            }
+
+            let newBoard = [...prev.board];
+            let newTopHand = [...prev.playerTopHand];
+            let newBottomHand = [...prev.playerBottomHand];
+            let sourceWasRack = false;
+            let tileFound = false;
+            
+            if (sourceSetId && sourceSetId.startsWith('RACK_')) {
+                sourceWasRack = true;
+                const isTop = sourceSetId === 'RACK_TOP';
+                if (isTop && newTopHand.some(t => t.id === tileId)) { newTopHand = newTopHand.filter(t => t.id !== tileId); tileFound = true; }
+                else if (!isTop && newBottomHand.some(t => t.id === tileId)) { newBottomHand = newBottomHand.filter(t => t.id !== tileId); tileFound = true; }
+            } else if (sourceSetId) {
+                const sourceSetIndex = newBoard.findIndex(s => s.id === sourceSetId);
+                if (sourceSetIndex !== -1) {
+                    const sourceTiles = newBoard[sourceSetIndex].tiles.filter(t => t.id !== tileId);
+                    if (sourceTiles.length < newBoard[sourceSetIndex].tiles.length) {
+                        tileFound = true;
+                        if (sourceTiles.length === 0) newBoard.splice(sourceSetIndex, 1);
+                        else newBoard[sourceSetIndex] = { ...newBoard[sourceSetIndex], tiles: sourceTiles };
+                    }
+                }
+            }
+            if (sourceSetId && !tileFound) return prev;
+
+            if (targetSetId) {
+                const targetIndex = newBoard.findIndex(s => s.id === targetSetId);
+                if (targetIndex !== -1) {
+                    const targetTiles = [...newBoard[targetIndex].tiles, tileData];
+                    const strictMode = !bypassValidation && prev.interactionMode !== 'REORDER_BOARD';
+                    const sorted = autoSortSet(targetTiles, strictMode); 
+                    if (sorted) newBoard[targetIndex] = { ...newBoard[targetIndex], tiles: sorted };
+                    else if (strictMode) return prev;
+                    else newBoard[targetIndex] = { ...newBoard[targetIndex], tiles: targetTiles };
+                }
+            } else {
+                let dropX = 0, dropY = 0;
+                if (targetPosOverride) { dropX = targetPosOverride.x; dropY = targetPosOverride.y; }
+                let orientation = sourceWasRack ? (sourceSetId === 'RACK_TOP' ? 'TOP' : 'BOTTOM') : 'BOTTOM';
+                const setId = specificCreatedSetId || uuidv4();
+                const existingIndex = newBoard.findIndex(s => s.id === setId);
+                if (existingIndex !== -1) {
+                     const currentTiles = newBoard[existingIndex].tiles;
+                     const strictMode = !bypassValidation && prev.interactionMode !== 'REORDER_BOARD';
+                     const sorted = autoSortSet([...currentTiles, tileData], strictMode); 
+                     if (sorted) newBoard[existingIndex] = { ...newBoard[existingIndex], tiles: sorted };
+                     else if (strictMode) return prev;
+                     else newBoard[existingIndex] = { ...newBoard[existingIndex], tiles: [...currentTiles, tileData] };
+                } else {
+                    newBoard.push({ id: setId, tiles: [tileData], orientation: orientation, createdBy: orientation, rotation: (Math.random() * 4) - 2, x: dropX, y: dropY });
+                }
+            }
+            return { ...prev, board: newBoard, playerTopHand: newTopHand, playerBottomHand: newBottomHand };
+        });
       };
 
-      const root = ReactDOM.createRoot(document.getElementById('root'));
-      root.render(<App />);
+      const aiStateRef = useRef({ processing: false });
+      const runAITurn = async () => {
+          if (aiStateRef.current.processing) return;
+          aiStateRef.current.processing = true;
+          const animateTile = async (tileId, startSel, endX, endY, tileData) => {
+             const AI_POINTER_ID = 999;
+             const startEl = document.querySelector(startSel);
+             let startX = 0, startY = 0;
+             if (startEl) { const rect = startEl.getBoundingClientRect(); startX = rect.left + rect.width/2; startY = rect.top + rect.height/2; }
+             dragOffsetsRef.current[AI_POINTER_ID] = { x: 0, y: 0 };
+             setGameState(prev => ({ ...prev, activeDrags: { ...prev.activeDrags, [AI_POINTER_ID]: { isDragging: true, tileId: tileId, sourceSetId: 'RACK_TOP', x: startX, y: startY, startX: startX, startY: startY, tileData: tileData, draggingSetId: null, initialSetPos: null } } }));
+             const duration = 500;
+             const start = performance.now();
+             await new Promise(resolve => {
+                 const animate = (time) => {
+                     const p = Math.min((time - start) / duration, 1);
+                     const ease = p * (2 - p);
+                     const curX = startX + (endX - startX) * ease;
+                     const curY = startY + (endY - startY) * ease;
+                     setGameState(prev => ({ ...prev, activeDrags: { ...prev.activeDrags, [AI_POINTER_ID]: { ...(prev.activeDrags[AI_POINTER_ID]), x: curX, y: curY } } }));
+                     if (p < 1) requestAnimationFrame(animate); else resolve(null);
+                 };
+                 requestAnimationFrame(animate);
+             });
+             setGameState(prev => { const next = { ...prev }; delete next.activeDrags[AI_POINTER_ID]; return next; });
+          };
+
+          const performMove = async (move) => {
+              if (move.type === 'ADD_TO_SET' && move.targetSetId) {
+                 for (const tile of move.tiles) {
+                     const setEl = document.querySelector(`[data-set-id="${move.targetSetId}"]`);
+                     let endX = 0, endY = 0;
+                     if (setEl) { const rect = setEl.getBoundingClientRect(); endX = rect.left + rect.width/2; endY = rect.top + rect.height/2; }
+                     await animateTile(tile.id, `[data-tile-id="${tile.id}"]`, endX, endY, tile);
+                     commitDrop(tile.id, tile, 'RACK_TOP', undefined, undefined, undefined, move.targetSetId, undefined, undefined, true);
+                     await new Promise(r => setTimeout(r, 200));
+                 }
+              } else if (move.type === 'PLAY_NEW_SET' && move.targetPos) {
+                  const createdSetId = uuidv4();
+                  const boardEl = document.getElementById('game-board-container');
+                  let baseX = 0, baseY = 0;
+                  if (boardEl) { const rect = boardEl.getBoundingClientRect(); baseX = rect.left + rect.width / 2; baseY = rect.top + rect.height / 2; }
+                  for (let i = 0; i < move.tiles.length; i++) {
+                     const tile = move.tiles[i];
+                     let endX = baseX + (isSideways ? move.targetPos.y : move.targetPos.x);
+                     let endY = baseY + (isSideways ? -move.targetPos.x : move.targetPos.y);
+                     if (i > 0) { const setEl = document.querySelector(`[data-set-id="${createdSetId}"]`); if (setEl) { const rect = setEl.getBoundingClientRect(); endX = rect.left + rect.width/2; endY = rect.top + rect.height/2; } }
+                     await animateTile(tile.id, `[data-tile-id="${tile.id}"]`, endX, endY, tile);
+                     commitDrop(tile.id, tile, 'RACK_TOP', undefined, undefined, undefined, i===0 ? undefined : createdSetId, i===0 ? move.targetPos : undefined, i===0 ? createdSetId : undefined, true);
+                     await new Promise(r => setTimeout(r, 200));
+                  }
+              } else if (move.type === 'SWAP_JOKER' && move.targetSetId) {
+                  const tile = move.tiles[0];
+                  const setEl = document.querySelector(`[data-set-id="${move.targetSetId}"]`);
+                  let endX = 0, endY = 0;
+                  if (setEl) { const rect = setEl.getBoundingClientRect(); endX = rect.left + rect.width/2; endY = rect.top + rect.height/2; }
+                  await animateTile(tile.id, `[data-tile-id="${tile.id}"]`, endX, endY, tile);
+                  setGameState(prev => {
+                      const setIndex = prev.board.findIndex(s => s.id === move.targetSetId);
+                      if (setIndex === -1) return prev;
+                      const targetSet = prev.board[setIndex];
+                      const newTiles = targetSet.tiles.filter(t => t.id !== move.jokerId);
+                      newTiles.push(tile);
+                      const sorted = autoSortSet(newTiles);
+                      const newBoard = [...prev.board];
+                      newBoard[setIndex] = { ...targetSet, tiles: sorted || newTiles };
+                      const jokerData = targetSet.tiles.find(t => t.id === move.jokerId);
+                      const newHand = prev.playerTopHand.filter(t => t.id !== tile.id);
+                      const pos = findFreeRackSlot(newHand);
+                      newHand.push({ ...jokerData, rackX: pos.x, rackY: pos.y });
+                      return { ...prev, board: newBoard, playerTopHand: newHand, lastDrawnTileId: { ...prev.lastDrawnTileId, TOP: null } };
+                  });
+                  await new Promise(r => setTimeout(r, 500));
+              } else if (move.type === 'SPLIT_SET') {
+                   const tile = move.tiles[0];
+                   const setEl = document.querySelector(`[data-set-id="${move.splitSetId}"]`);
+                   let endX = 0, endY = 0;
+                   if (setEl) { const rect = setEl.getBoundingClientRect(); endX = rect.left + rect.width / 2; endY = rect.top + rect.height / 2; }
+                   await animateTile(tile.id, `[data-tile-id="${tile.id}"]`, endX, endY, tile);
+                   setGameState(prev => {
+                       const newBoard = [...prev.board];
+                       const setIndex = newBoard.findIndex(s => s.id === move.splitSetId);
+                       if (setIndex === -1) return prev;
+                       const originalSet = newBoard[setIndex];
+                       const { width: w1 } = getSetDimensions(move.newSet1.length);
+                       const { width: w2 } = getSetDimensions(move.newSet2.length);
+                       const gap = 20; const totalW = w1 + gap + w2;
+                       const x1 = originalSet.x - (totalW / 2) + (w1 / 2);
+                       const x2 = x1 + (w1 / 2) + gap + (w2 / 2);
+                       newBoard.splice(setIndex, 1, { ...originalSet, id: uuidv4(), tiles: move.newSet1, x: x1 }, { ...originalSet, id: uuidv4(), tiles: move.newSet2, x: x2 });
+                       const newHand = prev.playerTopHand.filter(t => t.id !== tile.id);
+                       return { ...prev, board: newBoard, playerTopHand: newHand, lastDrawnTileId: { ...prev.lastDrawnTileId, TOP: null } };
+                   });
+                   await new Promise(r => setTimeout(r, 500));
+              } else if (move.type === 'STEAL_TILE') {
+                  const createdSetId = uuidv4();
+                  const handTiles = move.tiles.filter(t => t.id !== move.stolenTileId);
+                  const boardEl = document.getElementById('game-board-container');
+                  let baseX = 0, baseY = 0;
+                  if (boardEl) { const rect = boardEl.getBoundingClientRect(); baseX = rect.left + rect.width/2; baseY = rect.top + rect.height/2; }
+                  let endX = baseX + (isSideways ? move.targetPos.y : move.targetPos.x);
+                  let endY = baseY + (isSideways ? -move.targetPos.x : move.targetPos.y);
+                  for (const tile of handTiles) { await animateTile(tile.id, `[data-tile-id="${tile.id}"]`, endX, endY, tile); }
+                  const stolenTile = move.tiles.find(t => t.id === move.stolenTileId);
+                  await animateTile(stolenTile.id, `[data-tile-id="${stolenTile.id}"]`, endX, endY, stolenTile);
+                  setGameState(prev => {
+                      const newBoard = [...prev.board];
+                      const sourceIndex = newBoard.findIndex(s => s.id === move.sourceSetId);
+                      if (sourceIndex === -1) return prev;
+                      const sourceSet = newBoard[sourceIndex];
+                      if (move.remainderSplit) {
+                          const splitIdx = sourceSet.tiles.findIndex(t => t.id === move.stolenTileId);
+                          newBoard[sourceIndex] = { ...sourceSet, tiles: sourceSet.tiles.slice(0, splitIdx) };
+                          newBoard.push({ ...sourceSet, id: uuidv4(), tiles: sourceSet.tiles.slice(splitIdx + 1), x: sourceSet.x + 60 });
+                      } else {
+                          const newSourceTiles = sourceSet.tiles.filter(t => t.id !== move.stolenTileId);
+                          if (newSourceTiles.length === 0) newBoard.splice(sourceIndex, 1);
+                          else newBoard[sourceIndex] = { ...sourceSet, tiles: newSourceTiles };
+                      }
+                      newBoard.push({ id: createdSetId, tiles: move.tiles, orientation: 'TOP', createdBy: 'TOP', rotation: (Math.random()*4)-2, x: move.targetPos.x, y: move.targetPos.y });
+                      const newHand = prev.playerTopHand.filter(t => !handTiles.some(ht => ht.id === t.id));
+                      return { ...prev, board: newBoard, playerTopHand: newHand, lastDrawnTileId: { ...prev.lastDrawnTileId, TOP: null } };
+                  });
+                  await new Promise(r => setTimeout(r, 500));
+              }
+          };
+
+          let movesMade = 0;
+          for (let i=0; i<10; i++) {
+              const currentHand = [...gameStateRef.current.playerTopHand];
+              const currentBoard = [...gameStateRef.current.board];
+              const move = calculateNextAIMove(currentHand, currentBoard);
+              if (!move || move.type === 'DRAW') break;
+              await performMove(move);
+              movesMade++;
+              await new Promise(r => setTimeout(r, 500));
+          }
+          if (movesMade === 0) { handleDraw('TOP'); await new Promise(r => setTimeout(r, 500)); }
+          setIsAutoPlaying(false);
+          aiStateRef.current.processing = false;
+      };
+
+      useEffect(() => { if (isAutoPlaying && gameState.gamePhase === 'PLAYING') runAITurn(); }, [isAutoPlaying]);
+
+      const handleResetGame = () => setShowNewGameModal(true);
+      const confirmNewGameReset = () => { localStorage.removeItem('rummikub_state'); const newDeck = generateDeck(); setGameState({ ...DEFAULT_STATE, deck: newDeck, gamePhase: 'SETUP', setupState: { topCard: null, bottomCard: null } }); setShowNewGameModal(false); };
+
+      const handleSetupDraw = (pid) => {
+          setGameState(prev => {
+              if (prev.gamePhase !== 'SETUP') return prev;
+              if ((pid === 'TOP' && prev.setupState.topCard) || (pid === 'BOTTOM' && prev.setupState.bottomCard)) return prev;
+              const newDeck = [...prev.deck];
+              const drawnTile = newDeck.splice(Math.floor(Math.random() * newDeck.length), 1)[0];
+              return { ...prev, deck: newDeck, setupState: { ...prev.setupState, topCard: pid === 'TOP' ? drawnTile : prev.setupState.topCard, bottomCard: pid === 'BOTTOM' ? drawnTile : prev.setupState.bottomCard } };
+          });
+      };
+
+      const handleStartGame = () => {
+          const fullDeck = generateDeck();
+          const hand1 = fullDeck.splice(0, 14);
+          const hand2 = fullDeck.splice(0, 14);
+          setGameState(prev => ({ ...prev, gamePhase: 'PLAYING', deck: fullDeck, playerTopHand: sortHand(hand1, prev.playerTopSort), playerBottomHand: sortHand(hand2, prev.playerBottomSort), setupState: { topCard: null, bottomCard: null }, lastDrawnTileId: { TOP: null, BOTTOM: null } }));
+      };
+
+      const handleDragStart = (e, tile, sourceSetId) => {
+        e.preventDefault(); e.stopPropagation();
+        if (Object.values(gameState.activeDrags).some(d => d.tileId === tile.id)) return;
+        const rect = e.currentTarget.getBoundingClientRect();
+        dragOffsetsRef.current[e.pointerId] = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+        setGameState(prev => ({ ...prev, activeDrags: { ...prev.activeDrags, [e.pointerId]: { isDragging: false, tileId: tile.id, sourceSetId, x: e.clientX, y: e.clientY, startX: e.clientX, startY: e.clientY, tileData: tile, draggingSetId: null, initialSetPos: null } } }));
+      };
+
+      const handleSetDragStart = (e, setId) => {
+          e.preventDefault(); e.stopPropagation();
+          if (Object.values(gameState.activeDrags).some(d => d.draggingSetId === setId)) return;
+          const set = gameState.board.find(s => s.id === setId);
+          if (!set) return;
+          dragOffsetsRef.current[e.pointerId] = { x: 0, y: 0 };
+          setGameState(prev => ({ ...prev, activeDrags: { ...prev.activeDrags, [e.pointerId]: { isDragging: true, draggingSetId: setId, tileId: null, initialSetPos: { x: set.x, y: set.y }, startX: e.clientX, startY: e.clientY, x: e.clientX, y: e.clientY, sourceSetId: null, tileData: null } } }));
+      };
+
+      const handleSetRotate = (setId) => setGameState(prev => ({ ...prev, board: prev.board.map(s => s.id === setId ? { ...s, orientation: s.orientation === 'TOP' ? 'BOTTOM' : 'TOP' } : s) }));
+      const handleCycleRotate = () => setGameState(prev => { const target = prev.board.filter(s => s.orientation === 'TOP').length > prev.board.length / 2 ? 'BOTTOM' : 'TOP'; return { ...prev, board: prev.board.map(s => ({ ...s, orientation: target })) }; });
+      const handleCompactBoard = () => setGameState(prev => ({ ...prev, board: compactBoardLogic(prev.board) }));
+
+      const handlePointerMove = (e) => {
+        e.preventDefault();
+        const dragData = gameState.activeDrags[e.pointerId];
+        if (!dragData) return;
+        const { tileId, isDragging, startX, startY, draggingSetId, initialSetPos } = dragData;
+        if (isDragging && draggingSetId && initialSetPos) {
+            const dx = e.clientX - startX;
+            const dy = e.clientY - startY;
+            const finalDx = isSideways ? -dy : dx;
+            const finalDy = isSideways ? dx : dy;
+            setGameState(prev => ({ ...prev, board: prev.board.map(s => s.id === draggingSetId ? { ...s, x: initialSetPos.x + finalDx, y: initialSetPos.y + finalDy } : s), activeDrags: { ...prev.activeDrags, [e.pointerId]: { ...dragData, x: e.clientX, y: e.clientY } } }));
+            return;
+        }
+        if (tileId) {
+            if (!isDragging) {
+                if (Math.hypot(e.clientX - startX, e.clientY - startY) > 5) {
+                    setGameState(prev => ({ ...prev, activeDrags: { ...prev.activeDrags, [e.pointerId]: { ...dragData, isDragging: true, x: e.clientX, y: e.clientY } } }));
+                }
+            } else {
+                setGameState(prev => ({ ...prev, activeDrags: { ...prev.activeDrags, [e.pointerId]: { ...dragData, x: e.clientX, y: e.clientY } } }));
+            }
+        }
+      };
+
+      const handlePointerUp = (e) => {
+        const dragData = gameState.activeDrags[e.pointerId];
+        if (!dragData) return;
+        delete dragOffsetsRef.current[e.pointerId];
+        const { isDragging, tileId, tileData, sourceSetId, draggingSetId } = dragData;
+        const cleanupDrag = (state) => { const newDrags = { ...state.activeDrags }; delete newDrags[e.pointerId]; return { ...state, activeDrags: newDrags }; };
+        if (draggingSetId || !tileId || !tileData) { setGameState(prev => cleanupDrag(prev)); return; }
+
+        if (!isDragging) {
+            const owner = sourceSetId?.includes('TOP') ? 'TOP' : (sourceSetId?.includes('BOTTOM') ? 'BOTTOM' : null);
+            if (owner) handleTileClick(tileId, owner);
+            setGameState(prev => cleanupDrag(prev));
+            return;
+        }
+
+        const elements = document.elementsFromPoint(e.clientX, e.clientY);
+        const targetRackId = elements.find(el => el.hasAttribute('data-rack-id'))?.getAttribute('data-rack-id');
+        const targetSlotEl = elements.find(el => el.hasAttribute('data-slot-x'));
+        const targetSlotX = targetSlotEl ? parseInt(targetSlotEl.getAttribute('data-slot-x')) : undefined;
+        const targetSlotY = targetSlotEl ? parseInt(targetSlotEl.getAttribute('data-slot-y')) : undefined;
+        const targetSetId = elements.find(el => el.hasAttribute('data-set-id'))?.getAttribute('data-set-id');
+        
+        let targetPosOverride;
+        if (!targetRackId && !targetSetId && gameState.interactionMode === 'REORDER_BOARD') {
+            const boardEl = document.getElementById('game-board-container');
+            if (boardEl) {
+                const rect = boardEl.getBoundingClientRect();
+                const rawDx = e.clientX - (rect.left + rect.width / 2);
+                const rawDy = e.clientY - (rect.top + rect.height / 2);
+                targetPosOverride = { x: isSideways ? -rawDy : rawDx, y: isSideways ? rawDx : rawDy };
+            }
+        }
+
+        if (gameState.interactionMode === 'REORDER_BOARD' || targetRackId) {
+             commitDrop(tileId, tileData, sourceSetId, targetRackId, targetSlotX, targetSlotY, targetSetId, targetPosOverride);
+        }
+        setGameState(prev => cleanupDrag(prev));
+      };
+
+      const getActiveHand = useCallback((pid) => pid === 'TOP' ? gameState.playerTopHand : gameState.playerBottomHand, [gameState]);
+      const handleTileClick = (tileId, owner) => setGameState(prev => { const cur = prev.selectedTileIds[owner]; const isSel = cur.includes(tileId); return { ...prev, activePlayer: owner, selectedTileIds: { ...prev.selectedTileIds, [owner]: isSel ? cur.filter(id => id !== tileId) : [...cur, tileId] } }; });
+      const handleSort = (pid, method) => setGameState(prev => ({ ...prev, playerTopHand: pid === 'TOP' ? sortHand(prev.playerTopHand, method) : prev.playerTopHand, playerBottomHand: pid === 'BOTTOM' ? sortHand(prev.playerBottomHand, method) : prev.playerBottomHand, playerTopSort: pid === 'TOP' ? method : prev.playerTopSort, playerBottomSort: pid === 'BOTTOM' ? method : prev.playerBottomSort, lastDrawnTileId: { ...prev.lastDrawnTileId, [pid]: null } }));
+      const handleDraw = (pid) => setGameState(prev => { if (prev.deck.length === 0) return prev; const newDeck = [...prev.deck]; const drawnTile = newDeck.pop(); const hand = pid === 'TOP' ? prev.playerTopHand : prev.playerBottomHand; const pos = findFreeRackSlot(hand); drawnTile.rackX = pos.x; drawnTile.rackY = pos.y; return { ...prev, deck: newDeck, playerTopHand: pid === 'TOP' ? [...hand, drawnTile] : prev.playerTopHand, playerBottomHand: pid === 'BOTTOM' ? [...hand, drawnTile] : prev.playerBottomHand, activePlayer: pid, lastDrawnTileId: { ...prev.lastDrawnTileId, [pid]: drawnTile.id } }; });
+      const handlePlayNewSet = (pid) => { const hand = getActiveHand(pid); const sel = gameState.selectedTileIds[pid]; const selected = hand.filter(t => sel.includes(t.id)); if (selected.length === 0) return; const candidate = autoSortSet(selected, gameState.interactionMode !== 'REORDER_BOARD'); if (candidate) { const pos = findFreePosition(gameState.board, candidate.length); setGameState(prev => ({ ...prev, board: [...prev.board, { id: uuidv4(), tiles: candidate, orientation: pid, createdBy: pid, rotation: (Math.random()*4)-2, x: pos.x, y: pos.y }], selectedTileIds: { ...prev.selectedTileIds, [pid]: [] }, playerTopHand: pid === 'TOP' ? hand.filter(t => !sel.includes(t.id)) : prev.playerTopHand, playerBottomHand: pid === 'BOTTOM' ? hand.filter(t => !sel.includes(t.id)) : prev.playerBottomHand, activePlayer: pid, lastDrawnTileId: { ...prev.lastDrawnTileId, [pid]: null } })); } };
+      
+      const handleSetClick = (e, setId) => {
+          if (gameState.interactionMode === 'SPLIT_SET') {
+              const setIndex = gameState.board.findIndex(s => s.id === setId);
+              if (setIndex === -1) return;
+              const set = gameState.board[setIndex];
+              if (set.tiles.length < 6) return;
+              const setElement = e.currentTarget;
+              const clickX = e.clientX;
+              const clickY = e.clientY;
+              const tileElements = Array.from(setElement.children).filter(child => !child.classList.contains('absolute'));
+              let minDistance = Infinity, splitIndex = -1;
+              for (let i = 1; i < tileElements.length; i++) {
+                  const rectPrev = tileElements[i-1].getBoundingClientRect();
+                  const rectNext = tileElements[i].getBoundingClientRect();
+                  const midX = (rectPrev.right + rectNext.left) / 2;
+                  const midY = (rectPrev.top + rectPrev.height/2 + rectNext.top + rectNext.height/2) / 2;
+                  const dist = Math.hypot(clickX - midX, clickY - midY);
+                  if (dist < minDistance) { minDistance = dist; splitIndex = i; }
+              }
+              if (splitIndex !== -1) {
+                  const tiles1 = set.tiles.slice(0, splitIndex);
+                  const tiles2 = set.tiles.slice(splitIndex);
+                  const { width: w1 } = getSetDimensions(tiles1.length);
+                  const { width: w2 } = getSetDimensions(tiles2.length);
+                  const gap = 10;
+                  const x1 = set.x - (w1 + gap + w2) / 2 + w1 / 2;
+                  const x2 = x1 + w1 / 2 + gap + w2 / 2;
+                  const newBoard = [...gameState.board];
+                  newBoard.splice(setIndex, 1, { ...set, id: uuidv4(), tiles: tiles1, x: x1 }, { ...set, id: uuidv4(), tiles: tiles2, x: x2 });
+                  setGameState(prev => ({ ...prev, board: newBoard }));
+              }
+              return;
+          }
+          const topSel = gameState.selectedTileIds.TOP;
+          const botSel = gameState.selectedTileIds.BOTTOM;
+          let actor = (topSel.length > 0 && botSel.length === 0) ? 'TOP' : ((botSel.length > 0 && topSel.length === 0) ? 'BOTTOM' : (topSel.length > 0 && botSel.length > 0 ? gameState.activePlayer || 'BOTTOM' : null));
+          if (!actor) return;
+          const targetSet = gameState.board.find(b => b.id === setId);
+          if (!targetSet) return;
+          const hand = getActiveHand(actor);
+          const sel = gameState.selectedTileIds[actor];
+          const selected = hand.filter(t => sel.includes(t.id));
+          if (selected.length === 0) return;
+          const newTiles = gameState.interactionMode === 'REORDER_BOARD' ? autoSortSet([...targetSet.tiles, ...selected], false) : validateMove(targetSet.tiles, selected);
+          if (newTiles) {
+              const newBoard = [...gameState.board];
+              newBoard[gameState.board.findIndex(b => b.id === setId)] = { ...targetSet, tiles: newTiles };
+              setGameState(prev => ({ ...prev, board: newBoard, playerTopHand: actor === 'TOP' ? hand.filter(t => !sel.includes(t.id)) : prev.playerTopHand, playerBottomHand: actor === 'BOTTOM' ? hand.filter(t => !sel.includes(t.id)) : prev.playerBottomHand, selectedTileIds: { ...prev.selectedTileIds, [actor]: [] }, lastDrawnTileId: { ...prev.lastDrawnTileId, [actor]: null } }));
+          }
+      };
+
+      const toggleReorder = () => setGameState(prev => prev.interactionMode === 'REORDER_BOARD' ? (validateBoard(prev.board) ? { ...prev, interactionMode: 'IDLE', boardSnapshot: null, rackSnapshots: null, activePlayer: null } : prev) : { ...prev, interactionMode: 'REORDER_BOARD', boardSnapshot: JSON.parse(JSON.stringify(prev.board)), rackSnapshots: { TOP: JSON.parse(JSON.stringify(prev.playerTopHand)), BOTTOM: JSON.parse(JSON.stringify(prev.playerBottomHand)) }, activePlayer: null });
+      const toggleSplitMode = () => setGameState(prev => ({ ...prev, interactionMode: prev.interactionMode === 'SPLIT_SET' ? 'IDLE' : 'SPLIT_SET' }));
+      const toggleAutoPlay = () => setIsAutoPlaying(prev => !prev);
+      const toggleSideways = () => setIsSideways(prev => !prev);
+      const handleResetBoard = () => setGameState(prev => ({ ...prev, board: prev.boardSnapshot ? JSON.parse(JSON.stringify(prev.boardSnapshot)) : prev.board, playerTopHand: prev.rackSnapshots ? JSON.parse(JSON.stringify(prev.rackSnapshots.TOP)) : prev.playerTopHand, playerBottomHand: prev.rackSnapshots ? JSON.parse(JSON.stringify(prev.rackSnapshots.BOTTOM)) : prev.playerBottomHand }));
+      
+      const draggingTileIds = Object.values(gameState.activeDrags).map(d => d.tileId).filter((id): id is string => id !== null);
+
+      return (
+        <div className="flex flex-col h-screen w-screen overflow-hidden bg-gray-900 font-sans touch-none" onPointerMove={handlePointerMove} onPointerUp={handlePointerUp} onPointerCancel={handlePointerUp} onContextMenu={(e) => e.preventDefault()}>
+          {gameState.gamePhase === 'PLAYING' && (
+            <PlayerRack playerId="TOP" tiles={gameState.playerTopHand} selectedTileIds={gameState.selectedTileIds.TOP} draggedTileIds={draggingTileIds} isMyTurn={gameState.activePlayer === 'TOP'} onSort={(method) => handleSort('TOP', method)} onDraw={() => handleDraw('TOP')} onPlayNewSet={() => handlePlayNewSet('TOP')} onDragStart={handleDragStart} interactionMode={gameState.interactionMode} newTileId={gameState.lastDrawnTileId.TOP} isSideways={isSideways} />
+          )}
+          <GameBoard sets={gameState.board} interactionMode={gameState.interactionMode} gamePhase={gameState.gamePhase} setupState={gameState.setupState} draggedTileIds={draggingTileIds} hasSelectedTiles={gameState.selectedTileIds.TOP.length > 0 || gameState.selectedTileIds.BOTTOM.length > 0} onSetClick={handleSetClick} onToggleReorder={toggleReorder} onResetBoard={handleResetBoard} onResetGame={handleResetGame} onDragStart={handleDragStart} onSetupDraw={handleSetupDraw} onStartGame={handleStartGame} onSetDragStart={handleSetDragStart} onSetRotate={handleSetRotate} onCycleRotate={handleCycleRotate} onCompactBoard={handleCompactBoard} onToggleSplit={toggleSplitMode} isAutoPlaying={isAutoPlaying} onToggleAutoPlay={toggleAutoPlay} isSideways={isSideways} onToggleSideways={toggleSideways} />
+          {gameState.gamePhase === 'PLAYING' && (
+            <PlayerRack playerId="BOTTOM" tiles={gameState.playerBottomHand} selectedTileIds={gameState.selectedTileIds.BOTTOM} draggedTileIds={draggingTileIds} isMyTurn={gameState.activePlayer === 'BOTTOM'} onSort={(method) => handleSort('BOTTOM', method)} onDraw={() => handleDraw('BOTTOM')} onPlayNewSet={() => handlePlayNewSet('BOTTOM')} onDragStart={handleDragStart} interactionMode={gameState.interactionMode} newTileId={gameState.lastDrawnTileId.BOTTOM} isSideways={isSideways} />
+          )}
+          {Object.entries(gameState.activeDrags).map(([pointerId, dragItem]) => {
+              if (!dragItem.isDragging || !dragItem.tileData) return null;
+              const offset = dragOffsetsRef.current[parseInt(pointerId)] || { x: 0, y: 0 };
+              const dragRotation = isSideways ? 90 : 0;
+              return (
+                  <div key={pointerId} className="fixed pointer-events-none z-50 shadow-2xl opacity-90 scale-110" style={{ left: dragItem.x - offset.x, top: dragItem.y - offset.y }}>
+                      <Tile tile={dragItem.tileData} size="md" rotation={dragRotation} />
+                  </div>
+              );
+          })}
+          {showNewGameModal && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+                  <div className="bg-gray-800 border border-gray-600 p-8 rounded-2xl shadow-2xl max-w-sm w-full flex flex-col gap-6 animate-in fade-in zoom-in duration-200">
+                      <div className="flex flex-col items-center gap-2">
+                          <AlertTriangle size={48} className="text-yellow-500 mb-2" />
+                          <h2 className="text-2xl font-bold text-white text-center">Start New Game?</h2>
+                          <p className="text-gray-300 text-center text-lg leading-relaxed">Are you sure? This will erase the current game.</p>
+                      </div>
+                      <div className="flex gap-4">
+                          <button onClick={() => setShowNewGameModal(false)} className="flex-1 py-4 rounded-xl bg-gray-700 text-white font-bold text-lg active:scale-95 transition-transform hover:bg-gray-600">Cancel</button>
+                          <button onClick={confirmNewGameReset} className="flex-1 py-4 rounded-xl bg-red-600 text-white font-bold text-lg shadow-lg active:scale-95 transition-transform hover:bg-red-500">New Game</button>
+                      </div>
+                  </div>
+              </div>
+          )}
+        </div>
+      );
+    };
+
+    // --- MOUNT ---
+    const rootElement = document.getElementById('root');
+    const root = ReactDOM.createRoot(rootElement);
+    root.render(<App />);
+
     </script>
-  </body>
+</body>
 </html>
